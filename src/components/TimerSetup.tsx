@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronRight, Volume2 } from 'lucide-react';
 import { getData } from '@/lib/store';
 import { TimerConfig } from '@/lib/types';
+import { BELL_OPTIONS, previewBell } from '@/lib/bells';
 
 interface TimerSetupProps {
   onStart: (config: TimerConfig) => void;
@@ -11,13 +12,13 @@ interface TimerSetupProps {
 }
 
 const durations = [2, 5, 7, 10, 15, 20, 30, 45, 60];
-const bells = ['Kangsê', 'Om', 'HanChi', 'Tingsha', 'None'];
+const bellOptions = [...BELL_OPTIONS];
 
 const TimerSetup = ({ onStart, onBack, initialDuration }: TimerSetupProps) => {
   const data = getData();
   const [duration, setDuration] = useState(initialDuration || data.settings.defaultQuickStartMinutes);
-  const [startBell, setStartBell] = useState(data.settings.preferredStartBell);
-  const [endBell, setEndBell] = useState(data.settings.preferredEndBell);
+  const [startBell, setStartBell] = useState(migrateBellName(data.settings.preferredStartBell));
+  const [endBell, setEndBell] = useState(migrateBellName(data.settings.preferredEndBell));
   const [intervalBells, setIntervalBells] = useState(data.settings.intervalBellsEnabled);
   const [ambientSound] = useState<string | null>(null);
 
@@ -65,8 +66,8 @@ const TimerSetup = ({ onStart, onBack, initialDuration }: TimerSetupProps) => {
 
       {/* Settings rows */}
       <div className="flex flex-col gap-1">
-        <SettingRow label="Starting bell" value={startBell} options={bells} onChange={setStartBell} />
-        <SettingRow label="Ending bell" value={endBell} options={bells} onChange={setEndBell} />
+        <BellRow label="Starting bell" value={startBell} options={bellOptions} onChange={setStartBell} />
+        <BellRow label="Ending bell" value={endBell} options={bellOptions} onChange={setEndBell} />
         <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-4">
           <span className="text-sm text-foreground">Interval bells</span>
           <button
@@ -95,7 +96,7 @@ const TimerSetup = ({ onStart, onBack, initialDuration }: TimerSetupProps) => {
   );
 };
 
-function SettingRow({ label, value, options, onChange }: {
+function BellRow({ label, value, options, onChange }: {
   label: string; value: string; options: string[]; onChange: (v: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -107,7 +108,16 @@ function SettingRow({ label, value, options, onChange }: {
         className="flex w-full items-center justify-between rounded-2xl bg-card px-5 py-4"
       >
         <span className="text-sm text-foreground">{label}</span>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          {value !== 'None' && (
+            <button
+              onClick={(e) => { e.stopPropagation(); previewBell(value); }}
+              className="rounded-lg p-1 text-muted-foreground hover:text-accent transition-colors"
+              aria-label="Preview bell"
+            >
+              <Volume2 className="h-4 w-4" />
+            </button>
+          )}
           <span className="text-sm text-accent">{value}</span>
           <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform ${open ? 'rotate-90' : ''}`} />
         </div>
@@ -129,6 +139,13 @@ function SettingRow({ label, value, options, onChange }: {
       )}
     </div>
   );
+}
+
+function migrateBellName(name: string): string {
+  if (name === 'Kangsê' || name === 'Om' || name === 'HanChi') return 'Root Chakra';
+  if (name === 'Tingsha') return 'Heart Chakra';
+  if (BELL_OPTIONS.includes(name as any)) return name;
+  return 'Root Chakra';
 }
 
 export default TimerSetup;
