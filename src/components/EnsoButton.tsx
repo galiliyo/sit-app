@@ -81,14 +81,39 @@ const EnsoButton = ({ onClick, label = 'Sit now', progress }: EnsoButtonProps) =
             />
           </>
         ) : (
-          <path
-            d={ensoPath}
-            fill="none"
-            stroke="hsl(40 10% 90% / 0.8)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <>
+            {/* Thick brushstroke base for texture */}
+            <path
+              d={ensoPath}
+              fill="none"
+              stroke="hsl(40 10% 90% / 0.12)"
+              strokeWidth="9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Main brushstroke - varying width via multiple overlapping strokes */}
+            <path
+              d={ensoPath}
+              fill="none"
+              stroke="hsl(40 10% 90% / 0.7)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Thinner inner edge for calligraphic feel */}
+            <path
+              d={ensoPath}
+              fill="none"
+              stroke="hsl(40 10% 90% / 0.9)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Tapered start - small dot at the brush entry */}
+            <circle cx="78" cy="10" r="3.5" fill="hsl(40 10% 90% / 0.8)" />
+            {/* Tapered end - fading tip */}
+            <circle cx="52" cy="11" r="1.5" fill="hsl(40 10% 90% / 0.4)" />
+          </>
         )}
       </motion.svg>
 
