@@ -8,7 +8,7 @@ import TimerSetup from '@/components/TimerSetup';
 import ActiveSession from '@/components/ActiveSession';
 import SessionComplete from '@/components/SessionComplete';
 import { TimerConfig } from '@/lib/types';
-import { recordSession, getData } from '@/lib/store';
+import { recordSession } from '@/lib/store';
 
 type Screen = 'tabs' | 'timer-setup' | 'active-session' | 'session-complete';
 
