@@ -47,39 +47,8 @@ const HomeScreen = ({ onStartWithConfig, onOpenTimerSetup }: HomeScreenProps) =>
         transition={{ duration: 0.5 }}
         className="flex flex-col gap-8"
       >
-        {/* Greeting */}
-        <div>
-          <p className="text-sm text-muted-foreground">{greeting}</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
-            {hasSatToday ? 'You sat today' : 'Today is still open'}
-          </h1>
-        </div>
-
-        {/* Last session */}
-        {lastSession && (
-          <div className="rounded-2xl bg-card px-5 py-4">
-            <p className="text-xs text-muted-foreground mb-1">Last session</p>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className={`h-2 w-2 rounded-full ${lastSession.qualifiedForDayCredit ? 'bg-success' : 'bg-destructive'}`} />
-                <span className="text-sm text-foreground">
-                  {lastSession.durationMinutes} min · {lastSession.sessionType}
-                </span>
-              </div>
-              <span className="text-xs text-muted-foreground">
-                {format(parseISO(lastSession.startTime), 'MMM d, h:mm a')}
-              </span>
-            </div>
-            {!lastSession.qualifiedForDayCredit && (
-              <p className="mt-1 text-xs text-destructive">
-                Below {data.settings.minimumSitMinutes}-min minimum — didn't count
-              </p>
-            )}
-          </div>
-        )}
-
-        {/* Sit Now CTA */}
-        <div className="flex flex-col items-center gap-5">
+        {/* Sit Now CTA — hero */}
+        <div className="flex flex-col items-center gap-4 pt-6">
           <EnsoButton onClick={() => defaultPreset && onStartWithConfig(presetToConfig(defaultPreset))} />
           <p className="text-xs text-muted-foreground">Just {data.settings.minimumSitMinutes} minutes counts</p>
         </div>
@@ -122,6 +91,19 @@ const HomeScreen = ({ onStartWithConfig, onOpenTimerSetup }: HomeScreenProps) =>
           </div>
         </div>
 
+        {/* Today status */}
+        {hasSatToday && (
+          <div className="rounded-2xl bg-card px-5 py-4">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-success" />
+              <p className="text-sm text-foreground">
+                {todayRecord?.totalSessions} session{(todayRecord?.totalSessions || 0) > 1 ? 's' : ''} · {todayMinutes} minutes
+              </p>
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">Streak preserved</p>
+          </div>
+        )}
+
         {/* Morning commitment */}
         {data.morningCommitmentTime && (
           <button
@@ -138,16 +120,17 @@ const HomeScreen = ({ onStartWithConfig, onOpenTimerSetup }: HomeScreenProps) =>
           </button>
         )}
 
-        {/* Today status */}
-        {hasSatToday && (
-          <div className="rounded-2xl bg-card px-5 py-4">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-success" />
-              <p className="text-sm text-foreground">
-                {todayRecord?.totalSessions} session{(todayRecord?.totalSessions || 0) > 1 ? 's' : ''} · {todayMinutes} minutes
-              </p>
+        {/* Last session — subtle, at the bottom */}
+        {lastSession && (
+          <div className="rounded-2xl bg-card/60 px-5 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`h-1.5 w-1.5 rounded-full ${lastSession.qualifiedForDayCredit ? 'bg-success' : 'bg-destructive'}`} />
+                <span className="text-xs text-muted-foreground">
+                  Last: {lastSession.durationMinutes} min · {format(parseISO(lastSession.startTime), 'MMM d, h:mm a')}
+                </span>
+              </div>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground">Streak preserved</p>
           </div>
         )}
       </motion.div>
