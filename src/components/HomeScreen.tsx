@@ -96,7 +96,7 @@ const HomeScreen = ({ onStartWithConfig, onOpenTimerSetup }: HomeScreenProps) =>
               onClick={() => onStartWithConfig(presetToConfig(preset))}
               className="rounded-xl bg-secondary px-5 py-2.5 text-sm font-medium text-secondary-foreground transition-colors active:bg-muted"
             >
-              {preset.name || `${preset.duration} min`}{!preset.name.includes('min') && ` · ${preset.duration}m`}
+              {preset.name && !preset.name.match(/^\d+\s*min$/i) ? `${preset.name} · ${preset.duration}m` : `${preset.duration} min`}
             </button>
           ))}
           <button
