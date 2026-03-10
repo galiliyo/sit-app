@@ -26,6 +26,11 @@ const defaultSettings: UserSettings = {
   warmUpSeconds: 10,
 };
 
+const defaultPresets: Preset[] = [
+  { id: 'p1', name: '5 min', duration: 5, startBell: 'Root Chakra', endBell: 'Root Chakra', intervalBells: false, intervalMinutes: 7, ambientSound: null, quickStart: true },
+  { id: 'p2', name: '10 min', duration: 10, startBell: 'Root Chakra', endBell: 'Root Chakra', intervalBells: false, intervalMinutes: 7, ambientSound: null, quickStart: true },
+  { id: 'p3', name: '15 min', duration: 15, startBell: 'Root Chakra', endBell: 'Heart Chakra', intervalBells: false, intervalMinutes: 7, ambientSound: null, quickStart: true },
+];
 const defaultReminders: ReminderSettings = {
   morningEnabled: true,
   morningTime: '07:30',
