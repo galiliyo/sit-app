@@ -1,4 +1,4 @@
-import { Session, DayRecord, StreakState, UserSettings, ReminderSettings, TimerConfig, Milestone, StatsSummary } from './types';
+import { Session, DayRecord, StreakState, UserSettings, ReminderSettings, TimerConfig, Milestone, StatsSummary, Preset } from './types';
 
 const STORAGE_KEY = 'sit_app_data';
 
