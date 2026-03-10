@@ -46,21 +46,20 @@ const TimerSetup = ({ onStart, onBack, initialDuration }: TimerSetupProps) => {
 
       {/* Duration */}
       <div className="mb-6">
-        <p className="mb-3 text-sm text-muted-foreground">Duration</p>
-        <div className="flex flex-wrap gap-2">
-          {durations.map(d => (
-            <button
-              key={d}
-              onClick={() => setDuration(d)}
-              className={`rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                d === duration
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-secondary text-secondary-foreground active:bg-muted'
-              }`}
-            >
-              {d} min
-            </button>
-          ))}
+        <p className="mb-3 text-sm text-muted-foreground">Duration (minutes)</p>
+        <div className="flex items-center gap-3 rounded-2xl bg-card px-5 py-4">
+          <input
+            type="number"
+            min={5}
+            max={60}
+            value={duration}
+            onChange={e => {
+              const val = Math.min(60, Math.max(5, parseInt(e.target.value) || 5));
+              setDuration(val);
+            }}
+            className="w-20 rounded-lg bg-muted px-3 py-2 text-sm text-foreground outline-none text-center"
+          />
+          <span className="text-sm text-muted-foreground">min</span>
         </div>
       </div>
 
