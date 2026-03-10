@@ -71,7 +71,7 @@ const SettingsScreen = () => {
 
   if (editingPreset) {
     return (
-      <div className="flex min-h-screen flex-col px-6 pb-24 pt-14">
+      <div className="flex min-h-screen flex-col px-6 pb-32 pt-14">
         <PresetEditor
           preset={editingPreset}
           onSave={handleSavePreset}
