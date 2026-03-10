@@ -84,13 +84,10 @@ const PresetEditor = ({ preset, onSave, onCancel }: PresetEditorProps) => {
         <Checkbox
           checked={draft.quickStart}
           onCheckedChange={(checked) => setDraft(d => ({ ...d, quickStart: !!checked }))}
-          disabled={!draft.quickStart && !canEnableQuickStart}
         />
         <div>
           <span className="text-sm text-foreground">Show in quick start</span>
-          {!draft.quickStart && !canEnableQuickStart && (
-            <p className="text-xs text-muted-foreground">Max 3 quick-start presets</p>
-          )}
+          <p className="text-xs text-muted-foreground">Replaces oldest if 3 already set</p>
         </div>
       </div>
 

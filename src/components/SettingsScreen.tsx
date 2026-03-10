@@ -87,7 +87,6 @@ const SettingsScreen = () => {
           preset={editingPreset}
           onSave={handleSavePreset}
           onCancel={() => setEditingPreset(null)}
-          canEnableQuickStart={editingPreset.quickStart || quickStartCount < 3}
         />
       </div>
     );
