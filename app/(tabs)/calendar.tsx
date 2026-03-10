@@ -41,7 +41,7 @@ export default function CalendarScreen() {
   const next = () => setViewDate(new Date(year, month + 1, 1));
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
       <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 32, gap: 24 }}>
         {/* Header */}
         <View className="flex-row items-center justify-between pt-6">

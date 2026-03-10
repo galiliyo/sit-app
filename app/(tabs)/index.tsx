@@ -57,10 +57,10 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
       <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 32, gap: 32 }}>
         {/* Greeting */}
-        <View className="pt-6">
+        <View className="pt-4">
           <Text className="text-sm text-muted-foreground">{greeting}</Text>
           <Text className="mt-1 text-2xl font-semibold tracking-tight text-foreground">
             {hasSatToday ? "You sat today" : "Today is still open"}

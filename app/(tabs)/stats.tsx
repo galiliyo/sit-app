@@ -31,7 +31,7 @@ export default function StatsScreen() {
   const maxMin = Math.max(...weekData.map((d) => d.minutes), 1);
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
       <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 32, gap: 24 }}>
         <Text className="pt-6 text-xl font-semibold text-foreground">Stats</Text>
 

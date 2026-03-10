@@ -103,7 +103,7 @@ export default function SettingsScreen() {
 
   if (editingPreset) {
     return (
-      <SafeAreaView className="flex-1 bg-background">
+      <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
         <PresetEditor
           preset={editingPreset}
           onSave={handleSavePreset}
@@ -114,7 +114,7 @@ export default function SettingsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -124,8 +124,6 @@ export default function SettingsScreen() {
           contentContainerStyle={{ paddingBottom: 32, gap: 20 }}
           keyboardShouldPersistTaps="handled"
         >
-          <Text className="pt-6 text-xl font-semibold text-foreground">Settings</Text>
-
           {/* Presets */}
           <Section title="Presets">
             <Text className="mb-2 text-xs text-muted-foreground">
