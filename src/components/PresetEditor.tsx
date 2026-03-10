@@ -96,13 +96,15 @@ const PresetEditor = ({ preset, onSave, onCancel, canEnableQuickStart }: PresetE
         </div>
       </div>
 
-      {/* Save */}
-      <button
-        onClick={() => onSave(draft)}
-        className="w-full rounded-2xl bg-accent py-3.5 text-center font-semibold text-accent-foreground transition-transform active:scale-[0.98]"
-      >
-        Save preset
-      </button>
+      {/* Save - with enough space to clear bottom nav */}
+      <div className="pb-8">
+        <button
+          onClick={() => onSave(draft)}
+          className="relative z-[60] w-full rounded-2xl bg-accent py-3.5 text-center font-semibold text-accent-foreground transition-transform active:scale-[0.98]"
+        >
+          Save preset
+        </button>
+      </div>
     </motion.div>
   );
 };
