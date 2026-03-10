@@ -20,7 +20,7 @@ const SettingsScreen = () => {
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const isFirstRender = useRef(true);
 
-  const quickStartCount = presets.filter(p => p.quickStart).length;
+  
 
   // Auto-save all changes
   useEffect(() => {
