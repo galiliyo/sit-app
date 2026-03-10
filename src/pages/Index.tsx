@@ -1,78 +1,39 @@
-import { useState, useCallback } from 'react';
 import BottomNav from '@/components/BottomNav';
-import HomeScreen from '@/components/HomeScreen';
-import CalendarScreen from '@/components/CalendarScreen';
-import StatsScreen from '@/components/StatsScreen';
-import SettingsScreen from '@/components/SettingsScreen';
-import TimerSetup from '@/components/TimerSetup';
-import ActiveSession from '@/components/ActiveSession';
-import SessionComplete from '@/components/SessionComplete';
-import { TimerConfig } from '@/lib/types';
-import { recordSession } from '@/lib/store';
-
-type Screen = 'tabs' | 'timer-setup' | 'active-session' | 'session-complete';
+import {
+  HomeScreen,
+  CalendarScreen,
+  StatsScreen,
+  SettingsScreen,
+  TimerSetupScreen,
+  ActiveSessionScreen,
+  SessionCompleteScreen,
+} from '@/screens';
+import { useAppNavigation } from '@/hooks/useAppNavigation';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('home');
-  const [screen, setScreen] = useState<Screen>('tabs');
-  const [timerConfig, setTimerConfig] = useState<TimerConfig | null>(null);
-  const [lastSessionMinutes, setLastSessionMinutes] = useState(0);
-  const [lastSessionQualified, setLastSessionQualified] = useState(false);
-  const [, forceUpdate] = useState(0);
+  const nav = useAppNavigation();
 
-  const refresh = () => forceUpdate(n => n + 1);
-
-  const handleStartWithConfig = useCallback((config: TimerConfig) => {
-    setTimerConfig(config);
-    setScreen('active-session');
-  }, []);
-
-  const handleTimerSetupStart = useCallback((config: TimerConfig) => {
-    setTimerConfig(config);
-    setScreen('active-session');
-  }, []);
-
-  const handleFinish = useCallback((elapsedSeconds: number) => {
-    if (!timerConfig) return;
-    const mins = Math.floor(elapsedSeconds / 60);
-    const session = recordSession(mins, elapsedSeconds, timerConfig);
-    setLastSessionMinutes(mins);
-    setLastSessionQualified(session.qualifiedForDayCredit);
-    setScreen('session-complete');
-  }, [timerConfig]);
-
-  const handleDiscard = useCallback(() => {
-    setScreen('tabs');
-    setTimerConfig(null);
-  }, []);
-
-  const handleContinue = useCallback(() => {
-    setScreen('tabs');
-    setTimerConfig(null);
-    refresh();
-  }, []);
-
-  if (screen === 'timer-setup') {
-    return <TimerSetup onStart={handleTimerSetupStart} onBack={() => setScreen('tabs')} />;
+  if (nav.screen === 'timer-setup') {
+    return <TimerSetupScreen onStart={nav.startSession} onBack={nav.goToTabs} />;
   }
 
-  if (screen === 'active-session' && timerConfig) {
-    return <ActiveSession config={timerConfig} onFinish={handleFinish} onDiscard={handleDiscard} />;
+  if (nav.screen === 'active-session' && nav.timerConfig) {
+    return <ActiveSessionScreen config={nav.timerConfig} onFinish={nav.finishSession} onDiscard={nav.discardSession} />;
   }
 
-  if (screen === 'session-complete') {
-    return <SessionComplete durationMinutes={lastSessionMinutes} qualified={lastSessionQualified} onContinue={handleContinue} />;
+  if (nav.screen === 'session-complete') {
+    return <SessionCompleteScreen durationMinutes={nav.lastSessionMinutes} qualified={nav.lastSessionQualified} onContinue={nav.continueAfterComplete} />;
   }
 
   return (
     <div className="mx-auto max-w-md">
-      {activeTab === 'home' && (
-        <HomeScreen onStartWithConfig={handleStartWithConfig} onOpenTimerSetup={() => setScreen('timer-setup')} />
+      {nav.activeTab === 'home' && (
+        <HomeScreen onStartWithConfig={nav.startSession} onOpenTimerSetup={nav.openTimerSetup} />
       )}
-      {activeTab === 'calendar' && <CalendarScreen />}
-      {activeTab === 'stats' && <StatsScreen />}
-      {activeTab === 'settings' && <SettingsScreen />}
-      <BottomNav activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); refresh(); }} />
+      {nav.activeTab === 'calendar' && <CalendarScreen />}
+      {nav.activeTab === 'stats' && <StatsScreen />}
+      {nav.activeTab === 'settings' && <SettingsScreen />}
+      <BottomNav activeTab={nav.activeTab} onTabChange={(tab) => nav.switchTab(tab as any)} />
     </div>
   );
 };
