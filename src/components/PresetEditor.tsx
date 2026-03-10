@@ -5,7 +5,7 @@ import { Preset } from '@/lib/types';
 import { BELL_OPTIONS, previewBell } from '@/lib/bells';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const durations = [2, 5, 7, 10, 15, 20, 30, 45, 60];
+
 
 interface PresetEditorProps {
   preset: Preset;
