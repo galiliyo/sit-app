@@ -1,24 +1,28 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Plus, Save } from 'lucide-react';
+import { Plus, Save, Pencil, Trash2 } from 'lucide-react';
 import { getData, updateData, resetData } from '@/lib/store';
+import { Preset } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
+import PresetEditor from './PresetEditor';
 
 const SettingsScreen = () => {
   const data = getData();
   const [settings, setSettings] = useState({
     ...data.settings,
-    quickStartPresets: data.settings.quickStartPresets || [5, 10, 15],
     warmUpEnabled: data.settings.warmUpEnabled ?? false,
     warmUpSeconds: data.settings.warmUpSeconds ?? 10,
   });
+  const [presets, setPresets] = useState<Preset[]>(data.presets || []);
   const [reminders, setReminders] = useState(data.reminders);
   const [commitment, setCommitment] = useState(data.morningCommitmentTime || '07:30');
-  const [newPreset, setNewPreset] = useState('');
+  const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
+
+  const quickStartCount = presets.filter(p => p.quickStart).length;
 
   const save = () => {
-    updateData(d => ({ ...d, settings, reminders, morningCommitmentTime: commitment }));
+    updateData(d => ({ ...d, settings, presets, reminders, morningCommitmentTime: commitment }));
     toast.success('Settings saved');
   };
 
@@ -29,28 +33,97 @@ const SettingsScreen = () => {
     }
   };
 
-  const addPreset = () => {
-    const val = parseInt(newPreset);
-    if (val > 0 && !settings.quickStartPresets.includes(val)) {
-      setSettings(s => ({
-        ...s,
-        quickStartPresets: [...s.quickStartPresets, val].sort((a, b) => a - b),
-      }));
-      setNewPreset('');
-    }
+  const handleSavePreset = (preset: Preset) => {
+    setPresets(prev => {
+      const idx = prev.findIndex(p => p.id === preset.id);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = preset;
+        return updated;
+      }
+      return [...prev, preset];
+    });
+    setEditingPreset(null);
   };
 
-  const removePreset = (min: number) => {
-    setSettings(s => ({
-      ...s,
-      quickStartPresets: s.quickStartPresets.filter((p: number) => p !== min),
-    }));
+  const handleDeletePreset = (id: string) => {
+    setPresets(prev => prev.filter(p => p.id !== id));
   };
+
+  const handleNewPreset = () => {
+    setEditingPreset({
+      id: `p_${Date.now()}`,
+      name: '',
+      duration: 10,
+      startBell: 'Root Chakra',
+      endBell: 'Root Chakra',
+      intervalBells: false,
+      intervalMinutes: 7,
+      ambientSound: null,
+      quickStart: quickStartCount < 3,
+    });
+  };
+
+  if (editingPreset) {
+    return (
+      <div className="flex min-h-screen flex-col px-6 pb-24 pt-14">
+        <PresetEditor
+          preset={editingPreset}
+          onSave={handleSavePreset}
+          onCancel={() => setEditingPreset(null)}
+          canEnableQuickStart={editingPreset.quickStart || quickStartCount < 3}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col px-6 pb-24 pt-14">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col gap-5">
         <h1 className="text-xl font-semibold text-foreground">Settings</h1>
+
+        {/* Presets */}
+        <Section title="Presets">
+          <p className="mb-2 text-xs text-muted-foreground">
+            Up to 3 can appear on your home screen as quick-start buttons
+          </p>
+          {presets.map(preset => (
+            <div key={preset.id} className="flex items-center justify-between rounded-2xl bg-card px-5 py-4">
+              <div className="flex items-center gap-3">
+                {preset.quickStart && (
+                  <div className="h-2 w-2 rounded-full bg-accent" />
+                )}
+                <div>
+                  <p className="text-sm text-foreground">{preset.name || `${preset.duration} min`}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {preset.duration}m · {preset.startBell}{preset.intervalBells ? ' · intervals' : ''}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setEditingPreset(preset)}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </button>
+                <button
+                  onClick={() => handleDeletePreset(preset.id)}
+                  className="rounded-lg p-1.5 text-muted-foreground hover:text-destructive transition-colors"
+                >
+                  <Trash2 className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+          ))}
+          <button
+            onClick={handleNewPreset}
+            className="flex items-center justify-center gap-2 rounded-2xl bg-card px-5 py-4 text-sm text-muted-foreground transition-colors active:bg-muted"
+          >
+            <Plus className="h-4 w-4" />
+            Add preset
+          </button>
+        </Section>
 
         {/* Goals */}
         <Section title="Goals">
@@ -67,44 +140,6 @@ const SettingsScreen = () => {
           <Row>
             <span className="text-sm text-foreground">Minimum sit</span>
             <span className="text-sm text-muted-foreground">{settings.minimumSitMinutes} min</span>
-          </Row>
-        </Section>
-
-        {/* Quick-start presets */}
-        <Section title="Quick-start presets">
-          <p className="mb-2 text-xs text-muted-foreground">Tap to set default · long-press ✕ to remove</p>
-          <Row>
-            <div className="flex flex-wrap gap-2">
-              {settings.quickStartPresets.map((min: number) => (
-                <div key={min} className="flex items-center gap-1 rounded-lg px-3 py-1.5"
-                  style={{ background: min === settings.defaultQuickStartMinutes ? 'hsl(var(--accent))' : 'hsl(var(--secondary))' }}
-                >
-                  <button
-                    onClick={() => setSettings(s => ({ ...s, defaultQuickStartMinutes: min }))}
-                    className={`text-sm font-medium ${min === settings.defaultQuickStartMinutes ? 'text-accent-foreground' : 'text-secondary-foreground'}`}
-                  >
-                    {min}m{min === settings.defaultQuickStartMinutes ? ' ✦' : ''}
-                  </button>
-                  <button onClick={() => removePreset(min)} className="ml-1 text-muted-foreground hover:text-destructive">
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-              <div className="flex items-center gap-1">
-                <input
-                  type="number"
-                  placeholder="min"
-                  value={newPreset}
-                  onChange={e => setNewPreset(e.target.value)}
-                  className="w-14 rounded-lg bg-muted px-2 py-1.5 text-sm text-foreground outline-none"
-                  min={1}
-                  max={120}
-                />
-                <button onClick={addPreset} className="rounded-lg bg-accent p-1.5 text-accent-foreground">
-                  <Plus className="h-3 w-3" />
-                </button>
-              </div>
-            </div>
           </Row>
         </Section>
 

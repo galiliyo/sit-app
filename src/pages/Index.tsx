@@ -67,7 +67,7 @@ const Index = () => {
   return (
     <div className="mx-auto max-w-md">
       {activeTab === 'home' && (
-        <HomeScreen onStartTimer={handleQuickStart} onOpenTimerSetup={() => setScreen('timer-setup')} />
+        <HomeScreen onStartWithConfig={handleStartWithConfig} onOpenTimerSetup={() => setScreen('timer-setup')} />
       )}
       {activeTab === 'calendar' && <CalendarScreen />}
       {activeTab === 'stats' && <StatsScreen />}
