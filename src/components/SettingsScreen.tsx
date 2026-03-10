@@ -72,11 +72,19 @@ const SettingsScreen = () => {
 
         {/* Quick-start presets */}
         <Section title="Quick-start presets">
+          <p className="mb-2 text-xs text-muted-foreground">Tap to set default · long-press ✕ to remove</p>
           <Row>
             <div className="flex flex-wrap gap-2">
               {settings.quickStartPresets.map((min: number) => (
-                <div key={min} className="flex items-center gap-1 rounded-lg bg-secondary px-3 py-1.5">
-                  <span className="text-sm text-secondary-foreground">{min}m</span>
+                <div key={min} className="flex items-center gap-1 rounded-lg px-3 py-1.5"
+                  style={{ background: min === settings.defaultQuickStartMinutes ? 'hsl(var(--accent))' : 'hsl(var(--secondary))' }}
+                >
+                  <button
+                    onClick={() => setSettings(s => ({ ...s, defaultQuickStartMinutes: min }))}
+                    className={`text-sm font-medium ${min === settings.defaultQuickStartMinutes ? 'text-accent-foreground' : 'text-secondary-foreground'}`}
+                  >
+                    {min}m{min === settings.defaultQuickStartMinutes ? ' ✦' : ''}
+                  </button>
                   <button onClick={() => removePreset(min)} className="ml-1 text-muted-foreground hover:text-destructive">
                     <X className="h-3 w-3" />
                   </button>
@@ -96,20 +104,6 @@ const SettingsScreen = () => {
                   <Plus className="h-3 w-3" />
                 </button>
               </div>
-            </div>
-          </Row>
-        </Section>
-
-        {/* Timer defaults */}
-        <Section title="Timer defaults">
-          <Row>
-            <span className="text-sm text-foreground">Quick-start</span>
-            <div className="flex items-center gap-2">
-              {[5, 10, 15].map(n => (
-                <Chip key={n} active={settings.defaultQuickStartMinutes === n} onClick={() => setSettings(s => ({ ...s, defaultQuickStartMinutes: n }))}>
-                  {n}m
-                </Chip>
-              ))}
             </div>
           </Row>
         </Section>
