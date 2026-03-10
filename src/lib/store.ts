@@ -82,7 +82,7 @@ function generateSeedData(): AppData {
       qualifiedForDayCredit: true,
       sessionType: hour < 12 ? 'morning' : 'evening',
       timerPresetUsed: duration,
-      bellsUsed: { start: 'Kangsê', end: 'Kangsê', interval: false },
+      bellsUsed: { start: 'Root Chakra', end: 'Root Chakra', interval: false },
     };
     sessions.push(session);
 
