@@ -1,4 +1,4 @@
-import { Session, DayRecord, StreakState, UserSettings, ReminderSettings, TimerConfig, Milestone, StatsSummary } from './types';
+import { Session, DayRecord, StreakState, UserSettings, ReminderSettings, TimerConfig, Milestone, StatsSummary, Preset } from './types';
 
 const STORAGE_KEY = 'sit_app_data';
 
@@ -10,6 +10,7 @@ interface AppData {
   reminders: ReminderSettings;
   milestones: Milestone[];
   morningCommitmentTime: string | null;
+  presets: Preset[];
 }
 
 const defaultSettings: UserSettings = {
@@ -25,6 +26,11 @@ const defaultSettings: UserSettings = {
   warmUpSeconds: 10,
 };
 
+const defaultPresets: Preset[] = [
+  { id: 'p1', name: '5 min', duration: 5, startBell: 'Root Chakra', endBell: 'Root Chakra', intervalBells: false, intervalMinutes: 7, ambientSound: null, quickStart: true },
+  { id: 'p2', name: '10 min', duration: 10, startBell: 'Root Chakra', endBell: 'Root Chakra', intervalBells: false, intervalMinutes: 7, ambientSound: null, quickStart: true },
+  { id: 'p3', name: '15 min', duration: 15, startBell: 'Root Chakra', endBell: 'Heart Chakra', intervalBells: false, intervalMinutes: 7, ambientSound: null, quickStart: true },
+];
 const defaultReminders: ReminderSettings = {
   morningEnabled: true,
   morningTime: '07:30',
@@ -147,13 +153,37 @@ function generateSeedData(): AppData {
       return m;
     }),
     morningCommitmentTime: '07:30',
+    presets: defaultPresets,
   };
+}
+
+function migrateData(data: any): AppData {
+  // Migrate from old quickStartPresets to new Preset objects
+  if (!data.presets) {
+    const oldPresets: number[] = data.settings?.quickStartPresets || [5, 10, 15];
+    data.presets = oldPresets.slice(0, 3).map((dur, i) => ({
+      id: `migrated_${i}`,
+      name: `${dur} min`,
+      duration: dur,
+      startBell: data.settings?.preferredStartBell || 'Root Chakra',
+      endBell: data.settings?.preferredEndBell || 'Root Chakra',
+      intervalBells: data.settings?.intervalBellsEnabled || false,
+      intervalMinutes: 7,
+      ambientSound: null,
+      quickStart: true,
+    }));
+  }
+  return data as AppData;
 }
 
 function loadData(): AppData {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const data = migrateData(JSON.parse(stored));
+      saveData(data);
+      return data;
+    }
   } catch {}
   const seed = generateSeedData();
   saveData(seed);

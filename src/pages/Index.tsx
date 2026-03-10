@@ -8,7 +8,7 @@ import TimerSetup from '@/components/TimerSetup';
 import ActiveSession from '@/components/ActiveSession';
 import SessionComplete from '@/components/SessionComplete';
 import { TimerConfig } from '@/lib/types';
-import { recordSession, getData } from '@/lib/store';
+import { recordSession } from '@/lib/store';
 
 type Screen = 'tabs' | 'timer-setup' | 'active-session' | 'session-complete';
 
@@ -22,16 +22,7 @@ const Index = () => {
 
   const refresh = () => forceUpdate(n => n + 1);
 
-  const handleQuickStart = useCallback((duration: number) => {
-    const data = getData();
-    const config: TimerConfig = {
-      duration,
-      startBell: data.settings.preferredStartBell,
-      endBell: data.settings.preferredEndBell,
-      intervalBells: data.settings.intervalBellsEnabled,
-      intervalMinutes: 7,
-      ambientSound: null,
-    };
+  const handleStartWithConfig = useCallback((config: TimerConfig) => {
     setTimerConfig(config);
     setScreen('active-session');
   }, []);
@@ -76,7 +67,7 @@ const Index = () => {
   return (
     <div className="mx-auto max-w-md">
       {activeTab === 'home' && (
-        <HomeScreen onStartTimer={handleQuickStart} onOpenTimerSetup={() => setScreen('timer-setup')} />
+        <HomeScreen onStartWithConfig={handleStartWithConfig} onOpenTimerSetup={() => setScreen('timer-setup')} />
       )}
       {activeTab === 'calendar' && <CalendarScreen />}
       {activeTab === 'stats' && <StatsScreen />}

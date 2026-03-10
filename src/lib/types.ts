@@ -67,6 +67,18 @@ export interface TimerConfig {
   ambientSound: string | null;
 }
 
+export interface Preset {
+  id: string;
+  name: string;
+  duration: number;
+  startBell: string;
+  endBell: string;
+  intervalBells: boolean;
+  intervalMinutes: number;
+  ambientSound: string | null;
+  quickStart: boolean; // show on home screen (max 3)
+}
+
 export interface Milestone {
   id: string;
   title: string;

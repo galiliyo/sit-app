@@ -1,14 +1,26 @@
 import { motion } from 'framer-motion';
-import { Flame, ChevronRight, Clock } from 'lucide-react';
+import { Flame, Clock } from 'lucide-react';
 import { getData, getTodayStr } from '@/lib/store';
 import { format, parseISO } from 'date-fns';
+import { TimerConfig, Preset } from '@/lib/types';
 
 interface HomeScreenProps {
-  onStartTimer: (duration: number) => void;
+  onStartWithConfig: (config: TimerConfig) => void;
   onOpenTimerSetup: () => void;
 }
 
-const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
+function presetToConfig(preset: Preset): TimerConfig {
+  return {
+    duration: preset.duration,
+    startBell: preset.startBell,
+    endBell: preset.endBell,
+    intervalBells: preset.intervalBells,
+    intervalMinutes: preset.intervalMinutes,
+    ambientSound: preset.ambientSound,
+  };
+}
+
+const HomeScreen = ({ onStartWithConfig, onOpenTimerSetup }: HomeScreenProps) => {
   const data = getData();
   const todayStr = getTodayStr();
   const todayRecord = data.dayRecords[todayStr];
@@ -17,9 +29,10 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
   const streak = data.streak.currentDailyStreak;
   const weekCount = data.streak.currentWeekCount;
   const weeklyGoal = data.streak.weeklyGoal;
-  const presets = data.settings.quickStartPresets || [5, 10, 15];
 
-  // Last session info
+  const quickPresets = (data.presets || []).filter(p => p.quickStart).slice(0, 3);
+  const defaultPreset = quickPresets[0];
+
   const lastSession = data.sessions.length > 0 ? data.sessions[data.sessions.length - 1] : null;
 
   const hour = new Date().getHours();
@@ -67,7 +80,7 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
         {/* Sit Now CTA */}
         <div className="flex flex-col items-center gap-5">
           <button
-            onClick={() => onStartTimer(data.settings.defaultQuickStartMinutes)}
+            onClick={() => defaultPreset && onStartWithConfig(presetToConfig(defaultPreset))}
             className="flex h-32 w-32 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_40px_hsl(var(--primary)/0.15)] transition-transform active:scale-95"
           >
             <span className="text-lg font-semibold">Sit now</span>
@@ -75,15 +88,15 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
           <p className="text-xs text-muted-foreground">Just {data.settings.minimumSitMinutes} minutes counts</p>
         </div>
 
-        {/* Quick durations */}
+        {/* Quick presets */}
         <div className="flex justify-center gap-3">
-          {presets.map(min => (
+          {quickPresets.map(preset => (
             <button
-              key={min}
-              onClick={() => onStartTimer(min)}
+              key={preset.id}
+              onClick={() => onStartWithConfig(presetToConfig(preset))}
               className="rounded-xl bg-secondary px-5 py-2.5 text-sm font-medium text-secondary-foreground transition-colors active:bg-muted"
             >
-              {min} min
+              {preset.name}
             </button>
           ))}
           <button
@@ -123,10 +136,9 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
               <Clock className="h-4 w-4 text-muted-foreground" />
               <div className="text-left">
                 <p className="text-sm text-foreground">Tomorrow morning</p>
-                <p className="text-xs text-muted-foreground">{data.morningCommitmentTime} AM · {data.settings.defaultQuickStartMinutes} min</p>
+                <p className="text-xs text-muted-foreground">{data.morningCommitmentTime} AM · {defaultPreset?.duration || 5} min</p>
               </div>
             </div>
-            <ChevronRight className="h-4 w-4 text-muted-foreground" />
           </button>
         )}
 
