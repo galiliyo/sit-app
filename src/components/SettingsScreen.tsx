@@ -76,7 +76,7 @@ const SettingsScreen = () => {
       intervalBells: false,
       intervalMinutes: 7,
       ambientSound: null,
-      quickStart: quickStartCount < 3,
+      quickStart: true,
     });
   };
 
