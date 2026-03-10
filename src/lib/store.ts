@@ -157,10 +157,33 @@ function generateSeedData(): AppData {
   };
 }
 
+function migrateData(data: any): AppData {
+  // Migrate from old quickStartPresets to new Preset objects
+  if (!data.presets) {
+    const oldPresets: number[] = data.settings?.quickStartPresets || [5, 10, 15];
+    data.presets = oldPresets.slice(0, 3).map((dur, i) => ({
+      id: `migrated_${i}`,
+      name: `${dur} min`,
+      duration: dur,
+      startBell: data.settings?.preferredStartBell || 'Root Chakra',
+      endBell: data.settings?.preferredEndBell || 'Root Chakra',
+      intervalBells: data.settings?.intervalBellsEnabled || false,
+      intervalMinutes: 7,
+      ambientSound: null,
+      quickStart: true,
+    }));
+  }
+  return data as AppData;
+}
+
 function loadData(): AppData {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) {
+      const data = migrateData(JSON.parse(stored));
+      saveData(data);
+      return data;
+    }
   } catch {}
   const seed = generateSeedData();
   saveData(seed);
