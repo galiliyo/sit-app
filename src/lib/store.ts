@@ -16,8 +16,8 @@ interface AppData {
 const defaultSettings: UserSettings = {
   minimumSitMinutes: 2,
   defaultQuickStartMinutes: 5,
-  preferredStartBell: 'Kangsê',
-  preferredEndBell: 'Kangsê',
+  preferredStartBell: 'Root Chakra',
+  preferredEndBell: 'Root Chakra',
   intervalBellsEnabled: false,
   preferredTheme: 'dark',
   weeklyGoal: 5,
@@ -82,7 +82,7 @@ function generateSeedData(): AppData {
       qualifiedForDayCredit: true,
       sessionType: hour < 12 ? 'morning' : 'evening',
       timerPresetUsed: duration,
-      bellsUsed: { start: 'Kangsê', end: 'Kangsê', interval: false },
+      bellsUsed: { start: 'Root Chakra', end: 'Root Chakra', interval: false },
     };
     sessions.push(session);
 

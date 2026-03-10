@@ -5,7 +5,7 @@ import { Preset } from '@/lib/types';
 import { BELL_OPTIONS, previewBell } from '@/lib/bells';
 import { Checkbox } from '@/components/ui/checkbox';
 
-const durations = [2, 5, 7, 10, 15, 20, 30, 45, 60];
+
 
 interface PresetEditorProps {
   preset: Preset;
@@ -46,21 +46,20 @@ const PresetEditor = ({ preset, onSave, onCancel, canEnableQuickStart }: PresetE
 
       {/* Duration */}
       <div>
-        <p className="mb-2 text-xs text-muted-foreground">Duration</p>
-        <div className="flex flex-wrap gap-2">
-          {durations.map(d => (
-            <button
-              key={d}
-              onClick={() => setDraft(p => ({ ...p, duration: d }))}
-              className={`rounded-xl px-4 py-2.5 text-sm font-medium transition-colors ${
-                d === draft.duration
-                  ? 'bg-accent text-accent-foreground'
-                  : 'bg-secondary text-secondary-foreground active:bg-muted'
-              }`}
-            >
-              {d} min
-            </button>
-          ))}
+        <p className="mb-2 text-xs text-muted-foreground">Duration (minutes)</p>
+        <div className="flex items-center gap-3 rounded-2xl bg-card px-5 py-4">
+          <input
+            type="number"
+            min={5}
+            max={60}
+            value={draft.duration}
+            onChange={e => {
+              const val = Math.min(60, Math.max(5, parseInt(e.target.value) || 5));
+              setDraft(p => ({ ...p, duration: val }));
+            }}
+            className="w-20 rounded-lg bg-muted px-3 py-2 text-sm text-foreground outline-none text-center"
+          />
+          <span className="text-sm text-muted-foreground">min</span>
         </div>
       </div>
 
