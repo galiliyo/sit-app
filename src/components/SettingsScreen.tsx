@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Save, Pencil, Trash2 } from 'lucide-react';
+import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { getData, updateData, resetData } from '@/lib/store';
 import { Preset } from '@/lib/types';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -18,13 +18,18 @@ const SettingsScreen = () => {
   const [reminders, setReminders] = useState(data.reminders);
   const [commitment, setCommitment] = useState(data.morningCommitmentTime || '07:30');
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
+  const isFirstRender = useRef(true);
 
   const quickStartCount = presets.filter(p => p.quickStart).length;
 
-  const save = () => {
+  // Auto-save all changes
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
     updateData(d => ({ ...d, settings, presets, reminders, morningCommitmentTime: commitment }));
-    toast.success('Settings saved');
-  };
+  }, [settings, presets, reminders, commitment]);
 
   const handleReset = () => {
     if (confirm('Reset all data? This cannot be undone.')) {
@@ -33,27 +38,21 @@ const SettingsScreen = () => {
     }
   };
 
-  const persistPresets = (updated: Preset[]) => {
-    setPresets(updated);
-    updateData(d => ({ ...d, presets: updated }));
-  };
-
   const handleSavePreset = (preset: Preset) => {
-    const prev = presets;
-    const idx = prev.findIndex(p => p.id === preset.id);
+    const idx = presets.findIndex(p => p.id === preset.id);
     if (idx >= 0) {
-      const updated = [...prev];
+      const updated = [...presets];
       updated[idx] = preset;
-      persistPresets(updated);
+      setPresets(updated);
     } else {
-      persistPresets([...prev, preset]);
+      setPresets([...presets, preset]);
     }
     setEditingPreset(null);
     toast.success('Preset saved');
   };
 
   const handleDeletePreset = (id: string) => {
-    persistPresets(presets.filter(p => p.id !== id));
+    setPresets(presets.filter(p => p.id !== id));
   };
 
   const handleNewPreset = () => {
@@ -213,15 +212,6 @@ const SettingsScreen = () => {
               className="bg-transparent text-right text-sm text-accent outline-none" />
           </Row>
         </Section>
-
-        {/* Save */}
-        <button
-          onClick={save}
-          className="flex items-center justify-center gap-2 rounded-2xl bg-accent py-3.5 text-center font-semibold text-accent-foreground active:scale-[0.98] transition-transform"
-        >
-          <Save className="h-4 w-4" />
-          Save
-        </button>
 
         {/* Data */}
         <Section title="Data">

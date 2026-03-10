@@ -72,7 +72,7 @@ const Index = () => {
       {activeTab === 'calendar' && <CalendarScreen />}
       {activeTab === 'stats' && <StatsScreen />}
       {activeTab === 'settings' && <SettingsScreen />}
-      <BottomNav activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomNav activeTab={activeTab} onTabChange={(tab) => { setActiveTab(tab); refresh(); }} />
     </div>
   );
 };
