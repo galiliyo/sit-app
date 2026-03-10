@@ -22,16 +22,7 @@ const Index = () => {
 
   const refresh = () => forceUpdate(n => n + 1);
 
-  const handleQuickStart = useCallback((duration: number) => {
-    const data = getData();
-    const config: TimerConfig = {
-      duration,
-      startBell: data.settings.preferredStartBell,
-      endBell: data.settings.preferredEndBell,
-      intervalBells: data.settings.intervalBellsEnabled,
-      intervalMinutes: 7,
-      ambientSound: null,
-    };
+  const handleStartWithConfig = useCallback((config: TimerConfig) => {
     setTimerConfig(config);
     setScreen('active-session');
   }, []);
