@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import { X, Plus } from 'lucide-react';
 import { getData, updateData, resetData } from '@/lib/store';
+import { Checkbox } from '@/components/ui/checkbox';
 
 const SettingsScreen = () => {
   const data = getData();
   const [settings, setSettings] = useState(data.settings);
   const [reminders, setReminders] = useState(data.reminders);
   const [commitment, setCommitment] = useState(data.morningCommitmentTime || '07:30');
+  const [newPreset, setNewPreset] = useState('');
 
   const save = () => {
     updateData(d => ({ ...d, settings, reminders, morningCommitmentTime: commitment }));
@@ -17,6 +20,24 @@ const SettingsScreen = () => {
       resetData();
       window.location.reload();
     }
+  };
+
+  const addPreset = () => {
+    const val = parseInt(newPreset);
+    if (val > 0 && !settings.quickStartPresets.includes(val)) {
+      setSettings(s => ({
+        ...s,
+        quickStartPresets: [...s.quickStartPresets, val].sort((a, b) => a - b),
+      }));
+      setNewPreset('');
+    }
+  };
+
+  const removePreset = (min: number) => {
+    setSettings(s => ({
+      ...s,
+      quickStartPresets: s.quickStartPresets.filter(p => p !== min),
+    }));
   };
 
   return (
@@ -70,6 +91,34 @@ const SettingsScreen = () => {
           </div>
         </Section>
 
+        {/* Quick-start presets */}
+        <Section title="Quick-start presets">
+          <div className="flex flex-wrap gap-2 rounded-2xl bg-card px-5 py-4">
+            {settings.quickStartPresets.map(min => (
+              <div key={min} className="flex items-center gap-1 rounded-lg bg-secondary px-3 py-1.5">
+                <span className="text-sm text-secondary-foreground">{min}m</span>
+                <button onClick={() => removePreset(min)} className="ml-1 text-muted-foreground hover:text-destructive">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+            <div className="flex items-center gap-1">
+              <input
+                type="number"
+                placeholder="min"
+                value={newPreset}
+                onChange={e => setNewPreset(e.target.value)}
+                className="w-14 rounded-lg bg-muted px-2 py-1.5 text-sm text-foreground outline-none"
+                min={1}
+                max={120}
+              />
+              <button onClick={addPreset} className="rounded-lg bg-accent p-1.5 text-accent-foreground">
+                <Plus className="h-3 w-3" />
+              </button>
+            </div>
+          </div>
+        </Section>
+
         {/* Timer defaults */}
         <Section title="Timer defaults">
           <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-4">
@@ -88,6 +137,37 @@ const SettingsScreen = () => {
               ))}
             </div>
           </div>
+        </Section>
+
+        {/* Warm-up */}
+        <Section title="Warm-up countdown">
+          <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-4">
+            <div className="flex items-center gap-3">
+              <Checkbox
+                checked={settings.warmUpEnabled}
+                onCheckedChange={(checked) => setSettings(s => ({ ...s, warmUpEnabled: !!checked }))}
+              />
+              <span className="text-sm text-foreground">Enable warm-up</span>
+            </div>
+          </div>
+          {settings.warmUpEnabled && (
+            <div className="flex items-center justify-between rounded-2xl bg-card px-5 py-4">
+              <span className="text-sm text-foreground">Duration</span>
+              <div className="flex items-center gap-2">
+                {[5, 10, 15, 30].map(n => (
+                  <button
+                    key={n}
+                    onClick={() => setSettings(s => ({ ...s, warmUpSeconds: n }))}
+                    className={`rounded-lg px-3 py-1.5 text-xs font-medium ${
+                      settings.warmUpSeconds === n ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
+                    }`}
+                  >
+                    {n}s
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </Section>
 
         {/* Morning commitment */}
