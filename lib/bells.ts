@@ -1,4 +1,5 @@
 import { Audio } from "expo-av";
+import * as Haptics from "expo-haptics";
 
 export const BELL_OPTIONS = ["Root Chakra", "Heart Chakra", "None"] as const;
 export type BellName = (typeof BELL_OPTIONS)[number];
@@ -22,6 +23,7 @@ async function getSound(name: string): Promise<Audio.Sound | null> {
 
 export async function playBell(name: string): Promise<void> {
   if (name === "None") return;
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   const mapped = mapLegacyName(name);
   const sound = await getSound(mapped);
   if (!sound) return;

@@ -9,6 +9,7 @@ import Animated, {
   withSpring,
   Easing,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
 import { useEffect } from "react";
 
 const AnimatedView = Animated.createAnimatedComponent(View);
@@ -72,6 +73,7 @@ export function EnsoButton({ onPress, label = "Sit now", progress }: EnsoButtonP
 
   const handlePressIn = () => {
     pressScale.value = withSpring(0.95, { stiffness: 300, damping: 20 });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
   };
 
   const handlePressOut = () => {

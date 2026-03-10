@@ -3,6 +3,7 @@ import { View, Text, Pressable, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect, router } from "expo-router";
 import { Flame, Clock } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { format, parseISO } from "date-fns";
 import { getData, getTodayStr } from "../../lib/store";
 import { EnsoButton } from "../../components/EnsoButton";
@@ -48,6 +49,7 @@ export default function HomeScreen() {
   const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
   const startWithConfig = (config: TimerConfig) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     router.push({
       pathname: "/active-session",
       params: { config: JSON.stringify(config) },
