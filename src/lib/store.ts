@@ -153,6 +153,7 @@ function generateSeedData(): AppData {
       return m;
     }),
     morningCommitmentTime: '07:30',
+    presets: defaultPresets,
   };
 }
 
