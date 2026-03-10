@@ -11,10 +11,9 @@ interface PresetEditorProps {
   preset: Preset;
   onSave: (preset: Preset) => void;
   onCancel: () => void;
-  canEnableQuickStart: boolean;
 }
 
-const PresetEditor = ({ preset, onSave, onCancel, canEnableQuickStart }: PresetEditorProps) => {
+const PresetEditor = ({ preset, onSave, onCancel }: PresetEditorProps) => {
   const [draft, setDraft] = useState<Preset>({ ...preset });
 
   return (
@@ -85,13 +84,10 @@ const PresetEditor = ({ preset, onSave, onCancel, canEnableQuickStart }: PresetE
         <Checkbox
           checked={draft.quickStart}
           onCheckedChange={(checked) => setDraft(d => ({ ...d, quickStart: !!checked }))}
-          disabled={!draft.quickStart && !canEnableQuickStart}
         />
         <div>
           <span className="text-sm text-foreground">Show in quick start</span>
-          {!draft.quickStart && !canEnableQuickStart && (
-            <p className="text-xs text-muted-foreground">Max 3 quick-start presets</p>
-          )}
+          <p className="text-xs text-muted-foreground">Replaces oldest if 3 already set</p>
         </div>
       </div>
 

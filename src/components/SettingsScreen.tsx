@@ -20,7 +20,7 @@ const SettingsScreen = () => {
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const isFirstRender = useRef(true);
 
-  const quickStartCount = presets.filter(p => p.quickStart).length;
+  
 
   // Auto-save all changes
   useEffect(() => {
@@ -39,14 +39,25 @@ const SettingsScreen = () => {
   };
 
   const handleSavePreset = (preset: Preset) => {
-    const idx = presets.findIndex(p => p.id === preset.id);
+    let updated = [...presets];
+    const idx = updated.findIndex(p => p.id === preset.id);
     if (idx >= 0) {
-      const updated = [...presets];
       updated[idx] = preset;
-      setPresets(updated);
     } else {
-      setPresets([...presets, preset]);
+      updated.push(preset);
     }
+    // If enabling quickStart and already 3 others, disable the oldest
+    if (preset.quickStart) {
+      const qsPresets = updated.filter(p => p.quickStart);
+      if (qsPresets.length > 3) {
+        const toDisable = qsPresets.find(p => p.id !== preset.id);
+        if (toDisable) {
+          const di = updated.findIndex(p => p.id === toDisable.id);
+          updated[di] = { ...updated[di], quickStart: false };
+        }
+      }
+    }
+    setPresets(updated);
     setEditingPreset(null);
     toast.success('Preset saved');
   };
@@ -65,7 +76,7 @@ const SettingsScreen = () => {
       intervalBells: false,
       intervalMinutes: 7,
       ambientSound: null,
-      quickStart: quickStartCount < 3,
+      quickStart: true,
     });
   };
 
@@ -76,7 +87,6 @@ const SettingsScreen = () => {
           preset={editingPreset}
           onSave={handleSavePreset}
           onCancel={() => setEditingPreset(null)}
-          canEnableQuickStart={editingPreset.quickStart || quickStartCount < 3}
         />
       </div>
     );
