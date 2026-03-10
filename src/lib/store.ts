@@ -10,6 +10,7 @@ interface AppData {
   reminders: ReminderSettings;
   milestones: Milestone[];
   morningCommitmentTime: string | null;
+  presets: Preset[];
 }
 
 const defaultSettings: UserSettings = {
