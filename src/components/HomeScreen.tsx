@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Flame, Clock } from 'lucide-react';
 import { getData, getTodayStr } from '@/lib/store';
+import EnsoButton from '@/components/EnsoButton';
 import { format, parseISO } from 'date-fns';
 import { TimerConfig, Preset } from '@/lib/types';
 
@@ -79,12 +80,7 @@ const HomeScreen = ({ onStartWithConfig, onOpenTimerSetup }: HomeScreenProps) =>
 
         {/* Sit Now CTA */}
         <div className="flex flex-col items-center gap-5">
-          <button
-            onClick={() => defaultPreset && onStartWithConfig(presetToConfig(defaultPreset))}
-            className="flex h-32 w-32 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-[0_0_40px_hsl(var(--primary)/0.15)] transition-transform active:scale-95"
-          >
-            <span className="text-lg font-semibold">Sit now</span>
-          </button>
+          <EnsoButton onClick={() => defaultPreset && onStartWithConfig(presetToConfig(defaultPreset))} />
           <p className="text-xs text-muted-foreground">Just {data.settings.minimumSitMinutes} minutes counts</p>
         </div>
 
