@@ -11,10 +11,9 @@ interface PresetEditorProps {
   preset: Preset;
   onSave: (preset: Preset) => void;
   onCancel: () => void;
-  canEnableQuickStart: boolean;
 }
 
-const PresetEditor = ({ preset, onSave, onCancel, canEnableQuickStart }: PresetEditorProps) => {
+const PresetEditor = ({ preset, onSave, onCancel }: PresetEditorProps) => {
   const [draft, setDraft] = useState<Preset>({ ...preset });
 
   return (
