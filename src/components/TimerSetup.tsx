@@ -11,7 +11,7 @@ interface TimerSetupProps {
   initialDuration?: number;
 }
 
-const durations = [2, 5, 7, 10, 15, 20, 30, 45, 60];
+
 const bellOptions = [...BELL_OPTIONS];
 
 const TimerSetup = ({ onStart, onBack, initialDuration }: TimerSetupProps) => {
