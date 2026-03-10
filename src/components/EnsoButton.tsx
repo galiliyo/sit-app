@@ -9,8 +9,8 @@ interface EnsoButtonProps {
 const EnsoButton = ({ onClick, label = 'Sit now', progress }: EnsoButtonProps) => {
   const isActive = progress !== undefined;
   
-  // Enso brushstroke path - slightly imperfect circle with a gap
-  const ensoPath = "M 75 8 C 110 6, 142 28, 148 65 C 154 102, 132 140, 95 148 C 58 156, 20 134, 10 97 C 0 60, 18 22, 55 12";
+  // Enso brushstroke path - organic, calligraphic with varying thickness feel
+  const ensoPath = "M 78 10 C 85 7, 98 5, 112 10 C 128 16, 141 30, 148 50 C 155 70, 155 90, 148 110 C 141 130, 126 144, 108 149 C 90 154, 70 152, 54 143 C 38 134, 24 118, 16 98 C 8 78, 8 56, 16 40 C 24 24, 38 14, 52 11";
   
   // Progress version - fuller circle
   const totalLength = 440;
@@ -81,14 +81,39 @@ const EnsoButton = ({ onClick, label = 'Sit now', progress }: EnsoButtonProps) =
             />
           </>
         ) : (
-          <path
-            d={ensoPath}
-            fill="none"
-            stroke="hsl(40 10% 90% / 0.8)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          />
+          <>
+            {/* Thick brushstroke base for texture */}
+            <path
+              d={ensoPath}
+              fill="none"
+              stroke="hsl(40 10% 90% / 0.12)"
+              strokeWidth="9"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Main brushstroke - varying width via multiple overlapping strokes */}
+            <path
+              d={ensoPath}
+              fill="none"
+              stroke="hsl(40 10% 90% / 0.7)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Thinner inner edge for calligraphic feel */}
+            <path
+              d={ensoPath}
+              fill="none"
+              stroke="hsl(40 10% 90% / 0.9)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Tapered start - small dot at the brush entry */}
+            <circle cx="78" cy="10" r="3.5" fill="hsl(40 10% 90% / 0.8)" />
+            {/* Tapered end - fading tip */}
+            <circle cx="52" cy="11" r="1.5" fill="hsl(40 10% 90% / 0.4)" />
+          </>
         )}
       </motion.svg>
 
