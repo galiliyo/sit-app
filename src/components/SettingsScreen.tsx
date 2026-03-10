@@ -6,7 +6,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 const SettingsScreen = () => {
   const data = getData();
-  const [settings, setSettings] = useState(data.settings);
+  const [settings, setSettings] = useState({
+    ...data.settings,
+    quickStartPresets: data.settings.quickStartPresets || [5, 10, 15],
+    warmUpEnabled: data.settings.warmUpEnabled ?? false,
+    warmUpSeconds: data.settings.warmUpSeconds ?? 10,
+  });
   const [reminders, setReminders] = useState(data.reminders);
   const [commitment, setCommitment] = useState(data.morningCommitmentTime || '07:30');
   const [newPreset, setNewPreset] = useState('');
