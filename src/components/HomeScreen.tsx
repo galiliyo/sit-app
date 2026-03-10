@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion';
 import { Flame, Clock } from 'lucide-react';
 import { getData, getTodayStr } from '@/lib/store';
+import EnsoButton from '@/components/EnsoButton';
 import { format, parseISO } from 'date-fns';
 import { TimerConfig, Preset } from '@/lib/types';
 
