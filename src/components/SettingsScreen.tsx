@@ -33,21 +33,27 @@ const SettingsScreen = () => {
     }
   };
 
+  const persistPresets = (updated: Preset[]) => {
+    setPresets(updated);
+    updateData(d => ({ ...d, presets: updated }));
+  };
+
   const handleSavePreset = (preset: Preset) => {
-    setPresets(prev => {
-      const idx = prev.findIndex(p => p.id === preset.id);
-      if (idx >= 0) {
-        const updated = [...prev];
-        updated[idx] = preset;
-        return updated;
-      }
-      return [...prev, preset];
-    });
+    const prev = presets;
+    const idx = prev.findIndex(p => p.id === preset.id);
+    if (idx >= 0) {
+      const updated = [...prev];
+      updated[idx] = preset;
+      persistPresets(updated);
+    } else {
+      persistPresets([...prev, preset]);
+    }
     setEditingPreset(null);
+    toast.success('Preset saved');
   };
 
   const handleDeletePreset = (id: string) => {
-    setPresets(prev => prev.filter(p => p.id !== id));
+    persistPresets(presets.filter(p => p.id !== id));
   };
 
   const handleNewPreset = () => {
