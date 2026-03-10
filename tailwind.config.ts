@@ -14,7 +14,7 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Cormorant Garamond', 'serif'],
+        sans: ['Lora', 'serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
