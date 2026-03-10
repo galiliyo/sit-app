@@ -20,6 +20,9 @@ const defaultSettings: UserSettings = {
   intervalBellsEnabled: false,
   preferredTheme: 'dark',
   weeklyGoal: 5,
+  quickStartPresets: [5, 10, 15],
+  warmUpEnabled: false,
+  warmUpSeconds: 10,
 };
 
 const defaultReminders: ReminderSettings = {

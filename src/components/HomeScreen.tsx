@@ -1,7 +1,7 @@
-import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Flame, ChevronRight, Clock } from 'lucide-react';
 import { getData, getTodayStr } from '@/lib/store';
+import { format, parseISO } from 'date-fns';
 
 interface HomeScreenProps {
   onStartTimer: (duration: number) => void;
@@ -17,6 +17,10 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
   const streak = data.streak.currentDailyStreak;
   const weekCount = data.streak.currentWeekCount;
   const weeklyGoal = data.streak.weeklyGoal;
+  const presets = data.settings.quickStartPresets || [5, 10, 15];
+
+  // Last session info
+  const lastSession = data.sessions.length > 0 ? data.sessions[data.sessions.length - 1] : null;
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -37,6 +41,29 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
           </h1>
         </div>
 
+        {/* Last session */}
+        {lastSession && (
+          <div className="rounded-2xl bg-card px-5 py-4">
+            <p className="text-xs text-muted-foreground mb-1">Last session</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className={`h-2 w-2 rounded-full ${lastSession.qualifiedForDayCredit ? 'bg-success' : 'bg-destructive'}`} />
+                <span className="text-sm text-foreground">
+                  {lastSession.durationMinutes} min · {lastSession.sessionType}
+                </span>
+              </div>
+              <span className="text-xs text-muted-foreground">
+                {format(parseISO(lastSession.startTime), 'MMM d, h:mm a')}
+              </span>
+            </div>
+            {!lastSession.qualifiedForDayCredit && (
+              <p className="mt-1 text-xs text-destructive">
+                Below {data.settings.minimumSitMinutes}-min minimum — didn't count
+              </p>
+            )}
+          </div>
+        )}
+
         {/* Sit Now CTA */}
         <div className="flex flex-col items-center gap-5">
           <button
@@ -45,12 +72,12 @@ const HomeScreen = ({ onStartTimer, onOpenTimerSetup }: HomeScreenProps) => {
           >
             <span className="text-lg font-semibold">Sit now</span>
           </button>
-          <p className="text-xs text-muted-foreground">Just 2 minutes counts</p>
+          <p className="text-xs text-muted-foreground">Just {data.settings.minimumSitMinutes} minutes counts</p>
         </div>
 
         {/* Quick durations */}
         <div className="flex justify-center gap-3">
-          {[5, 10, 15].map(min => (
+          {presets.map(min => (
             <button
               key={min}
               onClick={() => onStartTimer(min)}

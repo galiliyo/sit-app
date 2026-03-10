@@ -44,6 +44,9 @@ export interface UserSettings {
   intervalBellsEnabled: boolean;
   preferredTheme: string;
   weeklyGoal: number;
+  quickStartPresets: number[];
+  warmUpEnabled: boolean;
+  warmUpSeconds: number;
 }
 
 export interface StatsSummary {
