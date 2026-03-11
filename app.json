@@ -21,7 +21,11 @@
         "backgroundColor": "#0a0a0a"
       },
       "package": "com.galiliyo.sit",
-      "permissions": ["FOREGROUND_SERVICE", "FOREGROUND_SERVICE_MEDIA_PLAYBACK"]
+      "permissions": [
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "ios": {
       "bundleIdentifier": "com.galiliyo.sit",
@@ -39,6 +43,13 @@
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "efc215b8-6ec8-4922-815d-aa3b36d76341"
+      }
+    },
+    "owner": "galiliyo"
   }
 }
