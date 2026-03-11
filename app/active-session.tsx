@@ -9,6 +9,7 @@ import { playBell } from "../lib/bells";
 import { TimerConfig } from "../lib/types";
 import { EnsoButton } from "../components/EnsoButton";
 import { colors } from "../constants/theme";
+import { NoiseBackground } from "../components/NoiseBackground";
 
 export default function ActiveSessionScreen() {
   useKeepAwake();
@@ -130,6 +131,7 @@ export default function ActiveSessionScreen() {
   if (phase === "warmup") {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center px-6">
+        <NoiseBackground />
         <Text className="text-sm text-muted-foreground mb-4">Prepare yourself</Text>
         <Text
           className="text-8xl text-accent"
@@ -147,6 +149,7 @@ export default function ActiveSessionScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background items-center justify-between px-6 py-8">
+      <NoiseBackground />
       <Text className="text-sm text-muted-foreground">Meditation</Text>
 
       <View className="items-center gap-3">

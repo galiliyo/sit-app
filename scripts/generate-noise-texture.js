@@ -32,9 +32,9 @@ function generateNoiseDots(count) {
     const x = randRange(0, WIDTH).toFixed(1);
     const y = randRange(0, HEIGHT).toFixed(1);
     const r = randRange(0.3, 1.2).toFixed(2);
-    const opacity = randRange(0.02, 0.12).toFixed(3);
+    const opacity = randRange(0.06, 0.25).toFixed(3);
     // Mix of light and dark dots for organic feel
-    const color = rand() > 0.6 ? "#ffffff" : "#888888";
+    const color = rand() > 0.5 ? "#ffffff" : "#999999";
     dots.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="${color}" opacity="${opacity}"/>`);
   }
   return dots.join("\n    ");
@@ -56,9 +56,9 @@ function generateScratches(count) {
     const cx = (x1 + x2) / 2 + randRange(-8, 8);
     const cy = (y1 + y2) / 2 + randRange(-4, 4);
 
-    const opacity = randRange(0.03, 0.09).toFixed(3);
-    const strokeWidth = randRange(0.3, 0.8).toFixed(2);
-    const color = rand() > 0.5 ? "#ffffff" : "#aaaaaa";
+    const opacity = randRange(0.06, 0.15).toFixed(3);
+    const strokeWidth = randRange(0.4, 1.0).toFixed(2);
+    const color = rand() > 0.5 ? "#ffffff" : "#bbbbbb";
 
     lines.push(
       `<path d="M${x1.toFixed(1)},${y1.toFixed(1)} Q${cx.toFixed(1)},${cy.toFixed(1)} ${x2.toFixed(1)},${y2.toFixed(1)}" ` +
@@ -75,7 +75,7 @@ function generateDustSpecks(count) {
     const x = randRange(0, WIDTH).toFixed(1);
     const y = randRange(0, HEIGHT).toFixed(1);
     const r = randRange(1.5, 4).toFixed(2);
-    const opacity = randRange(0.01, 0.04).toFixed(3);
+    const opacity = randRange(0.03, 0.08).toFixed(3);
     specks.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#ffffff" opacity="${opacity}"/>`);
   }
   return specks.join("\n    ");

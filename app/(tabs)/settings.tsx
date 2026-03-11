@@ -5,6 +5,7 @@ import { useFocusEffect } from "expo-router";
 import { Plus, Pencil, Trash2 } from "lucide-react-native";
 import { getData, updateData, resetData, initStore } from "../../lib/store";
 import { HamburgerButton } from "../../components/HamburgerButton";
+import { NoiseBackground } from "../../components/NoiseBackground";
 import { Preset } from "../../lib/types";
 import { Section } from "../../components/Section";
 import { Row } from "../../components/Row";
@@ -105,6 +106,7 @@ export default function SettingsScreen() {
   if (editingPreset) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+        <NoiseBackground />
         <PresetEditor
           preset={editingPreset}
           onSave={handleSavePreset}
@@ -116,6 +118,7 @@ export default function SettingsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+      <NoiseBackground />
       <HamburgerButton />
       <KeyboardAvoidingView
         className="flex-1"

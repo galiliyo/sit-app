@@ -6,6 +6,7 @@ import { Flame, Clock, Sun, Moon, Target, Award } from "lucide-react-native";
 import { getData, getStats } from "../../lib/store";
 import { StatCard } from "../../components/StatCard";
 import { HamburgerButton } from "../../components/HamburgerButton";
+import { NoiseBackground } from "../../components/NoiseBackground";
 import { colors } from "../../constants/theme";
 
 const CARD_BG = "#1a1a1a";
@@ -41,6 +42,7 @@ export default function StatsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+      <NoiseBackground />
       <HamburgerButton />
 
       <View className="flex-1 px-6" style={{ marginTop: 64, gap: 20 }}>

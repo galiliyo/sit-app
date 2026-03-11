@@ -7,6 +7,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeIn, FadeInDown, ZoomIn } from "react-native-reanimated";
 import { getData } from "../lib/store";
 import { colors } from "../constants/theme";
+import { NoiseBackground } from "../components/NoiseBackground";
 
 export default function SessionCompleteScreen() {
   const params = useLocalSearchParams<{ minutes: string; seconds: string }>();
@@ -28,6 +29,7 @@ export default function SessionCompleteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background items-center justify-center px-6 gap-8">
+      <NoiseBackground />
       {/* Check icon */}
       <Animated.View
         entering={ZoomIn.delay(200).springify().stiffness(200)}

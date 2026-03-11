@@ -5,6 +5,7 @@ import { useFocusEffect } from "expo-router";
 import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { getData } from "../../lib/store";
 import { HamburgerButton } from "../../components/HamburgerButton";
+import { NoiseBackground } from "../../components/NoiseBackground";
 import { colors } from "../../constants/theme";
 
 const WEEK_HEADERS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
@@ -52,6 +53,7 @@ export default function CalendarScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+      <NoiseBackground />
       <HamburgerButton />
 
       <View className="flex-1 px-6" style={{ marginTop: 64, gap: 24 }}>

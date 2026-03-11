@@ -9,6 +9,7 @@ import { TimerConfig } from "../lib/types";
 import { BellRow } from "../components/BellRow";
 import { ToggleRow } from "../components/ToggleRow";
 import { colors } from "../constants/theme";
+import { NoiseBackground } from "../components/NoiseBackground";
 
 const bellOptions = [...BELL_OPTIONS];
 
@@ -51,6 +52,7 @@ export default function TimerSetupScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background">
+      <NoiseBackground />
       <ScrollView
         className="flex-1 px-6"
         contentContainerStyle={{ paddingBottom: 32 }}
