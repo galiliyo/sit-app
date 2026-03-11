@@ -1,11 +1,21 @@
 import { useState, useCallback } from "react";
-import { View, Text, ScrollView } from "react-native";
+import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { Flame, Clock, Sun, Moon, Target, Award } from "lucide-react-native";
 import { getData, getStats } from "../../lib/store";
 import { StatCard } from "../../components/StatCard";
+import { HamburgerButton } from "../../components/HamburgerButton";
 import { colors } from "../../constants/theme";
+
+const CARD_BG = "#1a1a1a";
+const CARD_SHADOW = {
+  shadowColor: "#fff",
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.06,
+  shadowRadius: 14,
+  elevation: 4,
+} as const;
 
 export default function StatsScreen() {
   const [, setRefresh] = useState(0);
@@ -13,7 +23,6 @@ export default function StatsScreen() {
 
   const data = getData();
   const stats = getStats();
-  const milestones = data.milestones.filter((m) => m.achieved);
 
   // Weekly bar chart - last 7 days
   const today = new Date();
@@ -31,10 +40,10 @@ export default function StatsScreen() {
   const maxMin = Math.max(...weekData.map((d) => d.minutes), 1);
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
-      <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 32, gap: 24 }}>
-        <Text className="pt-6 text-xl font-semibold text-foreground">Stats</Text>
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+      <HamburgerButton />
 
+      <View className="flex-1 px-6" style={{ marginTop: 64, gap: 20 }}>
         {/* Main stats grid - 2 columns */}
         <View className="gap-3">
           <View className="flex-row gap-3">
@@ -53,13 +62,19 @@ export default function StatsScreen() {
 
         {/* Extra stats */}
         <View className="flex-row gap-3">
-          <View className="flex-1 rounded-2xl bg-card p-4 items-center">
+          <View
+            className="flex-1 rounded-2xl p-4 items-center"
+            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+          >
             <Text className="text-2xl text-foreground" style={{ fontFamily: "JetBrainsMono_400Regular" }}>
               {stats.totalDaysMeditated}
             </Text>
             <Text className="mt-1 text-[11px] text-muted-foreground">days meditated</Text>
           </View>
-          <View className="flex-1 rounded-2xl bg-card p-4 items-center">
+          <View
+            className="flex-1 rounded-2xl p-4 items-center"
+            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+          >
             <Text className="text-2xl text-foreground" style={{ fontFamily: "JetBrainsMono_400Regular" }}>
               {stats.averageSessionMinutes}
             </Text>
@@ -68,7 +83,10 @@ export default function StatsScreen() {
         </View>
 
         {/* Weekly chart */}
-        <View className="rounded-2xl bg-card p-5">
+        <View
+          className="rounded-2xl p-5"
+          style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+        >
           <Text className="mb-4 text-sm text-muted-foreground">Last 7 days</Text>
           <View className="flex-row items-end justify-between gap-2" style={{ height: 100 }}>
             {weekData.map((d, i) => (
@@ -93,30 +111,7 @@ export default function StatsScreen() {
         <Text className="text-center text-sm text-muted-foreground">
           You are becoming someone who sits
         </Text>
-
-        {/* Milestones */}
-        {milestones.length > 0 && (
-          <View>
-            <Text className="mb-3 text-sm text-muted-foreground">Milestones</Text>
-            <View className="gap-2">
-              {milestones.map((m) => (
-                <View key={m.id} className="flex-row items-center gap-3 rounded-2xl bg-card px-4 py-3">
-                  <View
-                    className="h-8 w-8 items-center justify-center rounded-full"
-                    style={{ backgroundColor: "rgba(204, 140, 40, 0.1)" }}
-                  >
-                    <Award color={colors.accent} size={16} />
-                  </View>
-                  <View>
-                    <Text className="text-sm text-foreground">{m.title}</Text>
-                    <Text className="text-xs text-muted-foreground">{m.description}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
-        )}
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

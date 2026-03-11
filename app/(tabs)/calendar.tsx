@@ -1,12 +1,22 @@
 import { useState, useCallback } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
-import { ChevronLeft, ChevronRight, Flame } from "lucide-react-native";
+import { ChevronLeft, ChevronRight } from "lucide-react-native";
 import { getData } from "../../lib/store";
+import { HamburgerButton } from "../../components/HamburgerButton";
 import { colors } from "../../constants/theme";
 
 const WEEK_HEADERS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+
+const CARD_BG = "#1a1a1a";
+const CARD_SHADOW = {
+  shadowColor: "#fff",
+  shadowOffset: { width: 0, height: 0 },
+  shadowOpacity: 0.06,
+  shadowRadius: 14,
+  elevation: 4,
+} as const;
 
 export default function CalendarScreen() {
   const [, setRefresh] = useState(0);
@@ -41,22 +51,10 @@ export default function CalendarScreen() {
   const next = () => setViewDate(new Date(year, month + 1, 1));
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
-      <ScrollView className="flex-1 px-6" contentContainerStyle={{ paddingBottom: 32, gap: 24 }}>
-        {/* Header */}
-        <View className="flex-row items-center justify-between pt-6">
-          <Text className="text-xl font-semibold text-foreground">Calendar</Text>
-          <View className="flex-row items-center gap-1">
-            <Flame color={colors.accent} size={16} />
-            <Text
-              className="text-sm text-foreground"
-              style={{ fontFamily: "JetBrainsMono_400Regular" }}
-            >
-              {data.streak.currentDailyStreak}
-            </Text>
-          </View>
-        </View>
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+      <HamburgerButton />
 
+      <View className="flex-1 px-6" style={{ marginTop: 64, gap: 24 }}>
         {/* Month nav */}
         <View className="flex-row items-center justify-between">
           <Pressable onPress={prev} className="p-2">
@@ -126,7 +124,10 @@ export default function CalendarScreen() {
 
         {/* Selected day detail */}
         {selectedDay && (
-          <View className="rounded-2xl bg-card px-5 py-4">
+          <View
+            className="rounded-2xl px-5 py-4"
+            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+          >
             <Text className="text-sm font-medium text-foreground">
               {new Date(selectedDay + "T12:00:00").toLocaleDateString("default", {
                 weekday: "long",
@@ -155,7 +156,10 @@ export default function CalendarScreen() {
 
         {/* Streak cards */}
         <View className="flex-row gap-3">
-          <View className="flex-1 rounded-2xl bg-card p-4 items-center">
+          <View
+            className="flex-1 rounded-2xl p-4 items-center"
+            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+          >
             <Text
               className="text-2xl text-foreground"
               style={{ fontFamily: "JetBrainsMono_400Regular" }}
@@ -164,7 +168,10 @@ export default function CalendarScreen() {
             </Text>
             <Text className="mt-1 text-[11px] text-muted-foreground">current streak</Text>
           </View>
-          <View className="flex-1 rounded-2xl bg-card p-4 items-center">
+          <View
+            className="flex-1 rounded-2xl p-4 items-center"
+            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+          >
             <Text
               className="text-2xl text-foreground"
               style={{ fontFamily: "JetBrainsMono_400Regular" }}
@@ -174,7 +181,7 @@ export default function CalendarScreen() {
             <Text className="mt-1 text-[11px] text-muted-foreground">longest streak</Text>
           </View>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }

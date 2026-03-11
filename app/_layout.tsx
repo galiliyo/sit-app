@@ -15,6 +15,11 @@ import {
   JetBrainsMono_300Light,
   JetBrainsMono_400Regular,
 } from "@expo-google-fonts/jetbrains-mono";
+import {
+  PlayfairDisplay_400Regular,
+  PlayfairDisplay_600SemiBold,
+  PlayfairDisplay_700Bold,
+} from "@expo-google-fonts/playfair-display";
 import * as SplashScreen from "expo-splash-screen";
 import { initStore } from "../lib/store";
 import { configureAudio } from "../lib/bells";
@@ -38,6 +43,9 @@ export default function RootLayout() {
     DMSans_700Bold,
     JetBrainsMono_300Light,
     JetBrainsMono_400Regular,
+    PlayfairDisplay_400Regular,
+    PlayfairDisplay_600SemiBold,
+    PlayfairDisplay_700Bold,
   });
 
   useEffect(() => {

@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { Plus, Pencil, Trash2 } from "lucide-react-native";
 import { getData, updateData, resetData, initStore } from "../../lib/store";
+import { HamburgerButton } from "../../components/HamburgerButton";
 import { Preset } from "../../lib/types";
 import { Section } from "../../components/Section";
 import { Row } from "../../components/Row";
@@ -103,7 +104,7 @@ export default function SettingsScreen() {
 
   if (editingPreset) {
     return (
-      <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
+      <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
         <PresetEditor
           preset={editingPreset}
           onSave={handleSavePreset}
@@ -114,14 +115,15 @@ export default function SettingsScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-background" edges={["bottom", "left", "right"]}>
+    <SafeAreaView className="flex-1 bg-background" edges={["top", "bottom", "left", "right"]}>
+      <HamburgerButton />
       <KeyboardAvoidingView
         className="flex-1"
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <ScrollView
           className="flex-1 px-6"
-          contentContainerStyle={{ paddingBottom: 32, gap: 20 }}
+          contentContainerStyle={{ paddingTop: 64, paddingBottom: 32, gap: 20 }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Presets */}

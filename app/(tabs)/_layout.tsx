@@ -1,40 +1,14 @@
 import { Drawer } from "expo-router/drawer";
-import { Pressable } from "react-native";
-import { Home, Calendar, BarChart3, Settings, Menu } from "lucide-react-native";
+import { Home, Calendar, BarChart3, Settings } from "lucide-react-native";
 import { colors } from "../../constants/theme";
-import { DrawerActions } from "@react-navigation/native";
-import { useNavigation } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-
-function HamburgerButton() {
-  const navigation = useNavigation();
-  return (
-    <Pressable
-      onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
-      hitSlop={8}
-      style={{ marginLeft: 16 }}
-    >
-      <Menu color={colors.foreground} size={22} />
-    </Pressable>
-  );
-}
 
 export default function DrawerLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <Drawer
         screenOptions={{
-          headerShown: true,
-          headerStyle: {
-            backgroundColor: colors.background,
-          },
-          headerTintColor: colors.foreground,
-          headerTitleStyle: {
-            fontFamily: "DMSans_500Medium",
-            fontSize: 17,
-          },
-          headerShadowVisible: false,
-          headerLeft: () => <HamburgerButton />,
+          headerShown: false,
           drawerStyle: {
             backgroundColor: colors.background,
             width: 260,

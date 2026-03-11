@@ -25,6 +25,7 @@ export default {
       },
       fontFamily: {
         sans: ["DMSans"],
+        serif: ["PlayfairDisplay"],
         mono: ["JetBrainsMono"],
       },
     },
