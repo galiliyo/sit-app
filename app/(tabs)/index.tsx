@@ -97,7 +97,7 @@ export default function HomeScreen() {
             className="mt-1 tracking-tight text-foreground"
             style={{ fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 30 }}
           >
-            {hasSatToday ? "You sat today" : "Today is still open. Sit"}
+            {hasSatToday ? "You sat today" : "Today is still open"}
           </Text>
         </View>
 

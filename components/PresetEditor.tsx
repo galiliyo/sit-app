@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView, Switch } from "react-native";
+import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { ArrowLeft } from "lucide-react-native";
 import { Preset } from "../lib/types";
 import { BELL_OPTIONS } from "../lib/bells";
@@ -91,18 +91,11 @@ export function PresetEditor({ preset, onSave, onCancel }: PresetEditorProps) {
       />
 
       {/* Quick start toggle */}
-      <View className="flex-row items-center gap-3 rounded-2xl bg-card px-5 py-4">
-        <Switch
-          value={draft.quickStart}
-          onValueChange={(v) => setDraft((d) => ({ ...d, quickStart: v }))}
-          trackColor={{ false: colors.muted, true: colors.accent }}
-          thumbColor={colors.foreground}
-        />
-        <View>
-          <Text className="text-sm text-foreground">Show in quick start</Text>
-          <Text className="text-xs text-muted-foreground">Replaces oldest if 3 already set</Text>
-        </View>
-      </View>
+      <ToggleRow
+        label="Show in quick start"
+        value={draft.quickStart}
+        onChange={(v) => setDraft((d) => ({ ...d, quickStart: v }))}
+      />
 
       {/* Save */}
       <Pressable
