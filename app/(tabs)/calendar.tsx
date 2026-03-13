@@ -1,16 +1,17 @@
 import { useState, useCallback } from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect } from "expo-router";
-import { ChevronLeft, ChevronRight } from "lucide-react-native";
+import { useFocusEffect, router } from "expo-router";
+import { ChevronLeft, ChevronRight, Flame, Award } from "lucide-react-native";
 import { getData } from "../../lib/store";
+import { StatCard } from "../../components/StatCard";
 import { HamburgerButton } from "../../components/HamburgerButton";
 import { NoiseBackground } from "../../components/NoiseBackground";
 import { colors } from "../../constants/theme";
 
 const WEEK_HEADERS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-const CARD_BG = "#1a1a1a";
+const CARD_BG = "rgba(26, 26, 26, 0.50)";
 const CARD_SHADOW = {
   shadowColor: "#fff",
   shadowOffset: { width: 0, height: 0 },
@@ -56,7 +57,7 @@ export default function CalendarScreen() {
       <NoiseBackground />
       <HamburgerButton />
 
-      <View className="flex-1 px-6" style={{ marginTop: 64, gap: 24 }}>
+      <View className="flex-1 px-6" style={{ marginTop: 76, gap: 24 }}>
         {/* Month nav */}
         <View className="flex-row items-center justify-between">
           <Pressable onPress={prev} className="p-2">
@@ -158,31 +159,17 @@ export default function CalendarScreen() {
 
         {/* Streak cards */}
         <View className="flex-row gap-3">
-          <View
-            className="flex-1 rounded-2xl p-4 items-center"
-            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
-          >
-            <Text
-              className="text-2xl text-foreground"
-              style={{ fontFamily: "JetBrainsMono_400Regular" }}
-            >
-              {data.streak.currentDailyStreak}
-            </Text>
-            <Text className="mt-1 text-[11px] text-muted-foreground">current streak</Text>
-          </View>
-          <View
-            className="flex-1 rounded-2xl p-4 items-center"
-            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
-          >
-            <Text
-              className="text-2xl text-foreground"
-              style={{ fontFamily: "JetBrainsMono_400Regular" }}
-            >
-              {data.streak.longestDailyStreak}
-            </Text>
-            <Text className="mt-1 text-[11px] text-muted-foreground">longest streak</Text>
-          </View>
+          <StatCard icon={<Flame color={colors.accent} size={16} />} value={data.streak.currentDailyStreak} label="current streak" />
+          <StatCard icon={<Award color={colors.mutedForeground} size={16} />} value={data.streak.longestDailyStreak} label="longest streak" />
         </View>
+
+        {/* Data management link */}
+        <Pressable
+          onPress={() => router.push("/data-management")}
+          className="items-center py-4"
+        >
+          <Text className="text-sm text-muted-foreground underline">Manage Data</Text>
+        </Pressable>
       </View>
     </SafeAreaView>
   );

@@ -46,6 +46,11 @@ export default function HomeScreen() {
   const quickPresets = (data.presets || []).filter((p) => p.quickStart).slice(0, 3);
   const defaultPreset = quickPresets[0];
 
+  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(
+    () => quickPresets[0]?.id ?? null
+  );
+  const selectedPreset = quickPresets.find((p) => p.id === selectedPresetId) || defaultPreset;
+
   const lastSession = data.sessions.length > 0 ? data.sessions[data.sessions.length - 1] : null;
 
   const hour = new Date().getHours();
@@ -80,7 +85,7 @@ export default function HomeScreen() {
 
       <View className="flex-1 px-6">
         {/* Greeting — starts 20px below hamburger row */}
-        <View style={{ marginTop: 64 }}>
+        <View style={{ marginTop: 76 }}>
           <Text
             className="text-muted-foreground"
             style={{ fontFamily: "PlayfairDisplay_400Regular", fontSize: 20 }}
@@ -98,24 +103,30 @@ export default function HomeScreen() {
         {/* Enso CTA */}
         <View className="items-center" style={{ marginTop: 56 }}>
           <EnsoButton
-            onPress={() => defaultPreset && startWithConfig(presetToConfig(defaultPreset))}
-            color={hasSatToday ? colors.success : colors.accent}
+            onPress={() => selectedPreset && startWithConfig(presetToConfig(selectedPreset))}
+            color={colors.accent}
           />
         </View>
 
         {/* Duration presets */}
-        <View className="flex-row justify-center" style={{ marginTop: 28, gap: 28 }}>
-          {quickPresets.map((preset) => (
-            <Pressable
-              key={preset.id}
-              onPress={() => startWithConfig(presetToConfig(preset))}
-              className="active:opacity-70"
-            >
-              <Text className="text-base text-foreground opacity-60">
-                {preset.duration} min
-              </Text>
-            </Pressable>
-          ))}
+        <View className="flex-row justify-center" style={{ marginTop: 40, gap: 28 }}>
+          {quickPresets.map((preset) => {
+            const isSelected = preset.id === selectedPresetId;
+            return (
+              <Pressable
+                key={preset.id}
+                onPress={() => setSelectedPresetId(preset.id)}
+                className="active:opacity-70"
+              >
+                <Text
+                  style={isSelected ? { fontFamily: "DMSans_600SemiBold" } : undefined}
+                  className={`text-base text-foreground ${isSelected ? "opacity-90" : "opacity-50"}`}
+                >
+                  {preset.duration} min
+                </Text>
+              </Pressable>
+            );
+          })}
           <Pressable
             onPress={() => router.push("/timer-setup")}
             className="active:opacity-70"
@@ -162,19 +173,26 @@ export default function HomeScreen() {
           </View>
 
           {/* Last Session */}
-          {lastSession && (
-            <GlassCard className="flex-row items-center justify-between px-5 py-3.5">
-              <Text className="text-sm text-muted-foreground">Last Session</Text>
-              <View className="flex-row items-center gap-2">
-                <View
-                  className={`h-2.5 w-2.5 rounded-full ${lastSession.qualifiedForDayCredit ? "bg-success" : "bg-destructive"}`}
-                />
-                <Text className="text-sm text-muted-foreground">
-                  {lastSession.durationMinutes}min, {formatLastSessionTime()}
-                </Text>
-              </View>
-            </GlassCard>
-          )}
+          {lastSession && (() => {
+            const lastTime = formatLastSessionTime();
+            const showGreen = lastSession.qualifiedForDayCredit && lastTime === "today";
+            const showRed = !hasSatToday && lastTime === "yesterday";
+            return (
+              <GlassCard className="flex-row items-center justify-between px-5 py-3.5">
+                <Text className="text-sm text-muted-foreground">Last Session</Text>
+                <View className="flex-row items-center gap-2">
+                  {(showGreen || showRed) && (
+                    <View
+                      className={`h-2.5 w-2.5 rounded-full ${showGreen ? "bg-success" : "bg-destructive"}`}
+                    />
+                  )}
+                  <Text className="text-sm text-muted-foreground">
+                    {lastSession.durationMinutes}min, {lastTime}
+                  </Text>
+                </View>
+              </GlassCard>
+            );
+          })()}
         </View>
       </View>
     </SafeAreaView>

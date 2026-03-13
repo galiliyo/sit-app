@@ -2,14 +2,14 @@ import { useState, useCallback } from "react";
 import { View, Text } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
-import { Flame, Clock, Sun, Moon, Target, Award } from "lucide-react-native";
+import { Flame, Clock, Sun, Moon, Target, Award, Calendar as CalendarIcon, TrendingUp } from "lucide-react-native";
 import { getData, getStats } from "../../lib/store";
 import { StatCard } from "../../components/StatCard";
 import { HamburgerButton } from "../../components/HamburgerButton";
 import { NoiseBackground } from "../../components/NoiseBackground";
 import { colors } from "../../constants/theme";
 
-const CARD_BG = "#1a1a1a";
+const CARD_BG = "rgba(26, 26, 26, 0.50)";
 const CARD_SHADOW = {
   shadowColor: "#fff",
   shadowOffset: { width: 0, height: 0 },
@@ -45,7 +45,7 @@ export default function StatsScreen() {
       <NoiseBackground />
       <HamburgerButton />
 
-      <View className="flex-1 px-6" style={{ marginTop: 64, gap: 20 }}>
+      <View className="flex-1 px-6" style={{ marginTop: 76, gap: 20 }}>
         {/* Main stats grid - 2 columns */}
         <View className="gap-3">
           <View className="flex-row gap-3">
@@ -64,24 +64,8 @@ export default function StatsScreen() {
 
         {/* Extra stats */}
         <View className="flex-row gap-3">
-          <View
-            className="flex-1 rounded-2xl p-4 items-center"
-            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
-          >
-            <Text className="text-2xl text-foreground" style={{ fontFamily: "JetBrainsMono_400Regular" }}>
-              {stats.totalDaysMeditated}
-            </Text>
-            <Text className="mt-1 text-[11px] text-muted-foreground">days meditated</Text>
-          </View>
-          <View
-            className="flex-1 rounded-2xl p-4 items-center"
-            style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
-          >
-            <Text className="text-2xl text-foreground" style={{ fontFamily: "JetBrainsMono_400Regular" }}>
-              {stats.averageSessionMinutes}
-            </Text>
-            <Text className="mt-1 text-[11px] text-muted-foreground">avg. minutes</Text>
-          </View>
+          <StatCard icon={<CalendarIcon color={colors.mutedForeground} size={16} />} value={stats.totalDaysMeditated} label="days meditated" />
+          <StatCard icon={<TrendingUp color={colors.mutedForeground} size={16} />} value={stats.averageSessionMinutes} label="avg. minutes" />
         </View>
 
         {/* Weekly chart */}

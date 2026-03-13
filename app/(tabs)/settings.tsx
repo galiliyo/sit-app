@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { View, Text, Pressable, ScrollView, TextInput, Alert, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, Pressable, ScrollView, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
 import { Plus, Pencil, Trash2 } from "lucide-react-native";
-import { getData, updateData, resetData, initStore } from "../../lib/store";
+import { getData, updateData } from "../../lib/store";
 import { HamburgerButton } from "../../components/HamburgerButton";
 import { NoiseBackground } from "../../components/NoiseBackground";
 import { Preset } from "../../lib/types";
@@ -12,6 +12,8 @@ import { Row } from "../../components/Row";
 import { Chip } from "../../components/Chip";
 import { ToggleRow } from "../../components/ToggleRow";
 import { PresetEditor } from "../../components/PresetEditor";
+import { TimePicker } from "../../components/TimePicker";
+import { scheduleReminders } from "../../lib/notifications";
 import { colors } from "../../constants/theme";
 
 export default function SettingsScreen() {
@@ -27,6 +29,7 @@ export default function SettingsScreen() {
   const [presets, setPresets] = useState<Preset[]>(data.presets || []);
   const [reminders, setReminders] = useState(data.reminders);
   const [commitment, setCommitment] = useState(data.morningCommitmentTime || "07:30");
+  const [minSitText, setMinSitText] = useState(String(settings.minimumSitMinutes));
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const isFirstRender = useRef(true);
 
@@ -37,33 +40,10 @@ export default function SettingsScreen() {
       return;
     }
     updateData((d) => ({ ...d, settings, presets, reminders, morningCommitmentTime: commitment }));
+    scheduleReminders(reminders);
   }, [settings, presets, reminders, commitment]);
 
-  const handleReset = () => {
-    Alert.alert("Reset", "Reset all data? This cannot be undone.", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Reset",
-        style: "destructive",
-        onPress: async () => {
-          await resetData();
-          await initStore();
-          setRefresh((n) => n + 1);
-          const fresh = getData();
-          setSettings({
-            ...fresh.settings,
-            warmUpEnabled: fresh.settings.warmUpEnabled ?? false,
-            warmUpSeconds: fresh.settings.warmUpSeconds ?? 10,
-          });
-          setPresets(fresh.presets || []);
-          setReminders(fresh.reminders);
-          setCommitment(fresh.morningCommitmentTime || "07:30");
-        },
-      },
-    ]);
-  };
-
-  const handleSavePreset = (preset: Preset) => {
+const handleSavePreset = (preset: Preset) => {
     let updated = [...presets];
     const idx = updated.findIndex((p) => p.id === preset.id);
     if (idx >= 0) {
@@ -126,7 +106,7 @@ export default function SettingsScreen() {
       >
         <ScrollView
           className="flex-1 px-6"
-          contentContainerStyle={{ paddingTop: 64, paddingBottom: 32, gap: 20 }}
+          contentContainerStyle={{ paddingTop: 76, paddingBottom: 32, gap: 20 }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Presets */}
@@ -191,7 +171,21 @@ export default function SettingsScreen() {
             </Row>
             <Row>
               <Text className="text-sm text-foreground">Minimum sit</Text>
-              <Text className="text-sm text-muted-foreground">{settings.minimumSitMinutes} min</Text>
+              <View className="flex-row items-center gap-2">
+                <TextInput
+                  value={minSitText}
+                  onChangeText={setMinSitText}
+                  onBlur={() => {
+                    const val = Math.min(30, Math.max(1, parseInt(minSitText) || 5));
+                    setMinSitText(String(val));
+                    setSettings((s) => ({ ...s, minimumSitMinutes: val }));
+                  }}
+                  keyboardType="number-pad"
+                  className="w-12 rounded-lg bg-muted px-2 py-1.5 text-sm text-foreground text-center"
+                  maxLength={2}
+                />
+                <Text className="text-sm text-muted-foreground">min</Text>
+              </View>
             </Row>
           </Section>
 
@@ -230,12 +224,9 @@ export default function SettingsScreen() {
             {reminders.morningEnabled && (
               <Row>
                 <Text className="text-sm text-foreground">Time</Text>
-                <TextInput
+                <TimePicker
                   value={reminders.morningTime}
-                  onChangeText={(v) => setReminders((r) => ({ ...r, morningTime: v }))}
-                  className="text-right text-sm text-accent"
-                  placeholder="07:30"
-                  placeholderTextColor={colors.mutedForeground}
+                  onChange={(v) => setReminders((r) => ({ ...r, morningTime: v }))}
                 />
               </Row>
             )}
@@ -247,12 +238,9 @@ export default function SettingsScreen() {
             {reminders.eveningEnabled && (
               <Row>
                 <Text className="text-sm text-foreground">Time</Text>
-                <TextInput
+                <TimePicker
                   value={reminders.eveningTime}
-                  onChangeText={(v) => setReminders((r) => ({ ...r, eveningTime: v }))}
-                  className="text-right text-sm text-accent"
-                  placeholder="21:00"
-                  placeholderTextColor={colors.mutedForeground}
+                  onChange={(v) => setReminders((r) => ({ ...r, eveningTime: v }))}
                 />
               </Row>
             )}
@@ -272,17 +260,7 @@ export default function SettingsScreen() {
             </Row>
           </Section>
 
-          {/* Data */}
-          <Section title="Data">
-            <Pressable
-              onPress={handleReset}
-              className="w-full rounded-2xl bg-card px-5 py-4"
-            >
-              <Text className="text-sm text-destructive">Reset all data</Text>
-            </Pressable>
-          </Section>
-
-          <Text className="pb-4 text-center text-xs text-muted-foreground">Sit · v0.1</Text>
+<Text className="pb-4 text-center text-xs text-muted-foreground">Sit · v0.1</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
