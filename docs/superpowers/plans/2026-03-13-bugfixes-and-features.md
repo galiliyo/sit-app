@@ -2001,6 +2001,970 @@ git commit -m "fix: make all cards 80% transparent"
 
 ---
 
+## Chunk 9: Morning Block Feature (Android)
+
+Implements the full morning blocking feature from `docs/superpowers/specs/2026-03-11-morning-block-design.md`. This blocks distracting apps during a configurable morning window until the user completes a meditation session. Android only — uses Accessibility Service + System Overlay.
+
+### Task 32: Create the Expo native module scaffold
+
+**Files:**
+- Create: `modules/morning-block/index.ts`
+- Create: `modules/morning-block/src/MorningBlockModule.ts`
+- Create: `modules/morning-block/expo-module.config.json`
+
+- [ ] **Step 1: Scaffold the Expo module**
+
+Run:
+```bash
+npx create-expo-module@latest --local modules/morning-block
+```
+
+If the interactive scaffold doesn't fit, create manually:
+
+Create `modules/morning-block/expo-module.config.json`:
+```json
+{
+  "platforms": ["android"],
+  "android": {
+    "modules": ["expo.modules.morningblock.MorningBlockModule"]
+  }
+}
+```
+
+Create `modules/morning-block/index.ts`:
+```ts
+import { NativeModule, requireNativeModule } from "expo-modules-core";
+
+interface MorningBlockConfig {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+  dismissMode: "gentle" | "firm";
+  blockedApps: string[]; // package names
+  unlockedToday: boolean;
+  streakCount: number;
+}
+
+interface MorningBlockModuleType extends NativeModule {
+  configure(config: MorningBlockConfig): void;
+  unlockForToday(): void;
+  isAccessibilityEnabled(): Promise<boolean>;
+  openAccessibilitySettings(): void;
+  isOverlayEnabled(): Promise<boolean>;
+  requestOverlayPermission(): void;
+}
+
+export default requireNativeModule<MorningBlockModuleType>("MorningBlock");
+export type { MorningBlockConfig };
+```
+
+- [ ] **Step 2: Commit**
+
+```bash
+git add modules/morning-block/
+git commit -m "feat: scaffold morning-block expo native module"
+```
+
+---
+
+### Task 33: Write the Android native module (Kotlin)
+
+**Files:**
+- Create: `modules/morning-block/android/src/main/java/expo/modules/morningblock/MorningBlockModule.kt`
+- Create: `modules/morning-block/android/src/main/java/expo/modules/morningblock/BlockAccessibilityService.kt`
+- Create: `modules/morning-block/android/src/main/java/expo/modules/morningblock/BlockOverlayManager.kt`
+- Create: `modules/morning-block/android/build.gradle.kts`
+
+- [ ] **Step 1: Create build.gradle.kts**
+
+Create `modules/morning-block/android/build.gradle.kts`:
+```kotlin
+plugins {
+  id("com.android.library")
+  id("org.jetbrains.kotlin.android")
+}
+
+android {
+  namespace = "expo.modules.morningblock"
+  compileSdk = 35
+
+  defaultConfig {
+    minSdk = 24
+  }
+
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+  }
+
+  kotlinOptions {
+    jvmTarget = "17"
+  }
+}
+
+dependencies {
+  implementation("expo:expo-modules-core:+")
+}
+```
+
+- [ ] **Step 2: Create MorningBlockModule.kt**
+
+Create `modules/morning-block/android/src/main/java/expo/modules/morningblock/MorningBlockModule.kt`:
+```kotlin
+package expo.modules.morningblock
+
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import expo.modules.kotlin.modules.Module
+import expo.modules.kotlin.modules.ModuleDefinition
+import org.json.JSONArray
+import org.json.JSONObject
+
+class MorningBlockModule : Module() {
+  override fun definition() = ModuleDefinition {
+    Name("MorningBlock")
+
+    Function("configure") { configJson: String ->
+      val context = appContext.reactContext ?: return@Function
+      val config = JSONObject(configJson)
+      val prefs = context.getSharedPreferences("morning_block", Context.MODE_PRIVATE)
+      prefs.edit()
+        .putBoolean("enabled", config.optBoolean("enabled", false))
+        .putString("startTime", config.optString("startTime", "06:00"))
+        .putString("endTime", config.optString("endTime", "09:00"))
+        .putString("dismissMode", config.optString("dismissMode", "gentle"))
+        .putString("blockedApps", config.optJSONArray("blockedApps")?.toString() ?: "[]")
+        .putBoolean("unlockedToday", config.optBoolean("unlockedToday", false))
+        .putInt("streakCount", config.optInt("streakCount", 0))
+        .apply()
+    }
+
+    Function("unlockForToday") {
+      val context = appContext.reactContext ?: return@Function
+      val prefs = context.getSharedPreferences("morning_block", Context.MODE_PRIVATE)
+      prefs.edit().putBoolean("unlockedToday", true).apply()
+    }
+
+    AsyncFunction("isAccessibilityEnabled") {
+      val context = appContext.reactContext ?: return@AsyncFunction false
+      BlockAccessibilityService.isEnabled(context)
+    }
+
+    Function("openAccessibilitySettings") {
+      val context = appContext.reactContext ?: return@Function
+      val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+      intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+      context.startActivity(intent)
+    }
+
+    AsyncFunction("isOverlayEnabled") {
+      val context = appContext.reactContext ?: return@AsyncFunction false
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        Settings.canDrawOverlays(context)
+      } else {
+        true
+      }
+    }
+
+    Function("requestOverlayPermission") {
+      val context = appContext.reactContext ?: return@Function
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val intent = Intent(
+          Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+          Uri.parse("package:${context.packageName}")
+        )
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+        context.startActivity(intent)
+      }
+    }
+  }
+}
+```
+
+- [ ] **Step 3: Create BlockAccessibilityService.kt**
+
+Create `modules/morning-block/android/src/main/java/expo/modules/morningblock/BlockAccessibilityService.kt`:
+```kotlin
+package expo.modules.morningblock
+
+import android.accessibilityservice.AccessibilityService
+import android.accessibilityservice.AccessibilityServiceInfo
+import android.content.Context
+import android.view.accessibility.AccessibilityEvent
+import android.view.accessibility.AccessibilityManager
+import org.json.JSONArray
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
+class BlockAccessibilityService : AccessibilityService() {
+
+  companion object {
+    fun isEnabled(context: Context): Boolean {
+      val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+      val enabled = am.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
+      return enabled.any {
+        it.resolveInfo.serviceInfo.packageName == context.packageName &&
+          it.resolveInfo.serviceInfo.name == BlockAccessibilityService::class.java.name
+      }
+    }
+  }
+
+  private val overlayManager by lazy { BlockOverlayManager(this) }
+
+  override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+    if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+    val packageName = event.packageName?.toString() ?: return
+
+    // Don't block our own app
+    if (packageName == applicationContext.packageName) return
+
+    val prefs = getSharedPreferences("morning_block", Context.MODE_PRIVATE)
+    if (!prefs.getBoolean("enabled", false)) return
+    if (prefs.getBoolean("unlockedToday", false)) return
+
+    // Check time window
+    val now = SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date())
+    val startTime = prefs.getString("startTime", "06:00") ?: "06:00"
+    val endTime = prefs.getString("endTime", "09:00") ?: "09:00"
+    if (now < startTime || now >= endTime) return
+
+    // Check if this app is in the blocked list
+    val blockedAppsJson = prefs.getString("blockedApps", "[]") ?: "[]"
+    val blockedApps = JSONArray(blockedAppsJson)
+    val blockedList = (0 until blockedApps.length()).map { blockedApps.getString(it) }
+    if (packageName !in blockedList) return
+
+    // Show the overlay
+    val streakCount = prefs.getInt("streakCount", 0)
+    val dismissMode = prefs.getString("dismissMode", "gentle") ?: "gentle"
+    overlayManager.show(streakCount, dismissMode)
+  }
+
+  override fun onInterrupt() {}
+
+  override fun onDestroy() {
+    overlayManager.dismiss()
+    super.onDestroy()
+  }
+}
+```
+
+- [ ] **Step 4: Create BlockOverlayManager.kt**
+
+Create `modules/morning-block/android/src/main/java/expo/modules/morningblock/BlockOverlayManager.kt`:
+```kotlin
+package expo.modules.morningblock
+
+import android.content.Context
+import android.content.Intent
+import android.graphics.Color
+import android.graphics.PixelFormat
+import android.graphics.Typeface
+import android.os.Build
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.Gravity
+import android.view.View
+import android.view.WindowManager
+import android.widget.Button
+import android.widget.EditText
+import android.widget.LinearLayout
+import android.widget.TextView
+
+class BlockOverlayManager(private val context: Context) {
+
+  private var overlayView: View? = null
+  private val windowManager = context.getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+  private val dismissPhrases = listOf(
+    "I choose to scroll",
+    "I'll scroll instead",
+    "Not sitting today",
+    "Skip the sit",
+    "I'd rather scroll",
+    "Scrolling over sitting",
+    "More scrolling please",
+    "Still in bed",
+  )
+
+  fun show(streakCount: Int, dismissMode: String) {
+    if (overlayView != null) return // already showing
+
+    val layout = LinearLayout(context).apply {
+      orientation = LinearLayout.VERTICAL
+      gravity = Gravity.CENTER
+      setBackgroundColor(Color.parseColor("#0a0a0a"))
+      setPadding(80, 0, 80, 0)
+    }
+
+    // "Be still." title
+    val title = TextView(context).apply {
+      text = "Be still."
+      setTextColor(Color.parseColor("#e8e4de"))
+      textSize = 28f
+      gravity = Gravity.CENTER
+      typeface = Typeface.create("sans-serif-light", Typeface.NORMAL)
+    }
+    layout.addView(title)
+
+    // Subtitle
+    val subtitle = TextView(context).apply {
+      text = "Your morning sit\nis waiting"
+      setTextColor(Color.parseColor("#e8e4de55".toLong(16).toInt()))
+      textSize = 16f
+      gravity = Gravity.CENTER
+      setPadding(0, 24, 0, 32)
+    }
+    layout.addView(subtitle)
+
+    // Streak
+    if (streakCount > 0) {
+      val streak = TextView(context).apply {
+        text = "● $streakCount day streak"
+        setTextColor(Color.parseColor("#e8e4de77".toLong(16).toInt()))
+        textSize = 14f
+        gravity = Gravity.CENTER
+        setPadding(0, 0, 0, 40)
+      }
+      // Green dot is part of text for simplicity
+      layout.addView(streak)
+    }
+
+    // "Open Sit" button
+    val openBtn = Button(context).apply {
+      text = "Open Sit"
+      setTextColor(Color.parseColor("#cc8c28"))
+      setBackgroundColor(Color.TRANSPARENT)
+      textSize = 16f
+      setPadding(48, 24, 48, 24)
+      setOnClickListener {
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+        if (intent != null) {
+          intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+          context.startActivity(intent)
+        }
+        dismiss()
+      }
+    }
+    layout.addView(openBtn)
+
+    // Firm mode: type to dismiss
+    if (dismissMode == "firm") {
+      val phrase = dismissPhrases.random()
+
+      val firmLabel = TextView(context).apply {
+        text = "Or type to dismiss:"
+        setTextColor(Color.parseColor("#737373"))
+        textSize = 12f
+        gravity = Gravity.CENTER
+        setPadding(0, 48, 0, 8)
+      }
+      layout.addView(firmLabel)
+
+      val phraseLabel = TextView(context).apply {
+        text = "\"$phrase\""
+        setTextColor(Color.parseColor("#737373"))
+        textSize = 14f
+        gravity = Gravity.CENTER
+        setPadding(0, 0, 0, 12)
+        typeface = Typeface.create("sans-serif", Typeface.ITALIC)
+      }
+      layout.addView(phraseLabel)
+
+      val input = EditText(context).apply {
+        setTextColor(Color.parseColor("#e8e4de"))
+        setHintTextColor(Color.parseColor("#737373"))
+        hint = "Type the phrase above..."
+        textSize = 14f
+        setBackgroundColor(Color.parseColor("#1f1f1f"))
+        setPadding(32, 24, 32, 24)
+        addTextChangedListener(object : TextWatcher {
+          override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+          override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+          override fun afterTextChanged(s: Editable?) {
+            if (s?.toString()?.trim()?.equals(phrase, ignoreCase = true) == true) {
+              dismiss()
+            }
+          }
+        })
+      }
+      layout.addView(input)
+    } else {
+      // Gentle mode: tap anywhere to dismiss
+      layout.setOnClickListener { dismiss() }
+    }
+
+    val params = WindowManager.LayoutParams(
+      WindowManager.LayoutParams.MATCH_PARENT,
+      WindowManager.LayoutParams.MATCH_PARENT,
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+      else
+        @Suppress("DEPRECATION")
+        WindowManager.LayoutParams.TYPE_SYSTEM_ALERT,
+      WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+        WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+      PixelFormat.OPAQUE
+    )
+
+    // For firm mode, we need focusable for the EditText
+    if (dismissMode == "firm") {
+      params.flags = WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN
+    }
+
+    overlayView = layout
+    windowManager.addView(layout, params)
+  }
+
+  fun dismiss() {
+    overlayView?.let {
+      try {
+        windowManager.removeView(it)
+      } catch (_: Exception) {}
+      overlayView = null
+    }
+  }
+}
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add modules/morning-block/android/
+git commit -m "feat: implement morning block native Android module"
+```
+
+---
+
+### Task 34: Create Expo config plugin for permissions and service declaration
+
+**Files:**
+- Create: `modules/morning-block/app.plugin.js`
+- Create: `modules/morning-block/android/src/main/res/xml/accessibility_service_config.xml`
+
+- [ ] **Step 1: Create accessibility service config XML**
+
+Create `modules/morning-block/android/src/main/res/xml/accessibility_service_config.xml`:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:canRetrieveWindowContent="false"
+    android:notificationTimeout="100"
+    android:description="@string/morning_block_description" />
+```
+
+Create `modules/morning-block/android/src/main/res/values/strings.xml`:
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="morning_block_description">Sit uses this to detect when you open distracting apps during your morning block window and show a meditation reminder.</string>
+</resources>
+```
+
+- [ ] **Step 2: Create the config plugin**
+
+Create `modules/morning-block/app.plugin.js`:
+```js
+const { withAndroidManifest } = require("expo/config-plugins");
+
+function withMorningBlock(config) {
+  config = withAndroidManifest(config, async (config) => {
+    const manifest = config.modResults;
+    const app = manifest.manifest.application?.[0];
+    if (!app) return config;
+
+    // Add SYSTEM_ALERT_WINDOW permission
+    const permissions = manifest.manifest["uses-permission"] || [];
+    if (!permissions.find((p) => p.$?.["android:name"] === "android.permission.SYSTEM_ALERT_WINDOW")) {
+      permissions.push({
+        $: { "android:name": "android.permission.SYSTEM_ALERT_WINDOW" },
+      });
+    }
+    manifest.manifest["uses-permission"] = permissions;
+
+    // Declare the AccessibilityService
+    const services = app.service || [];
+    const serviceName = "expo.modules.morningblock.BlockAccessibilityService";
+    if (!services.find((s) => s.$?.["android:name"] === serviceName)) {
+      services.push({
+        $: {
+          "android:name": serviceName,
+          "android:permission": "android.permission.BIND_ACCESSIBILITY_SERVICE",
+          "android:exported": "false",
+        },
+        "intent-filter": [
+          {
+            action: [
+              { $: { "android:name": "android.accessibilityservice.AccessibilityService" } },
+            ],
+          },
+        ],
+        "meta-data": [
+          {
+            $: {
+              "android:name": "android.accessibilityservice",
+              "android:resource": "@xml/accessibility_service_config",
+            },
+          },
+        ],
+      });
+    }
+    app.service = services;
+
+    return config;
+  });
+
+  return config;
+}
+
+module.exports = withMorningBlock;
+```
+
+- [ ] **Step 3: Register plugin in app.json**
+
+Add to `app.json` plugins array:
+```json
+"./modules/morning-block/app.plugin.js"
+```
+
+- [ ] **Step 4: Commit**
+
+```bash
+git add modules/morning-block/app.plugin.js modules/morning-block/android/src/main/res/ app.json
+git commit -m "feat: add config plugin for morning block permissions and service"
+```
+
+---
+
+### Task 35: Add MorningBlockSettings to store and types
+
+**Files:**
+- Modify: `lib/types.ts`
+- Modify: `lib/store.ts`
+
+- [ ] **Step 1: Add types**
+
+In `lib/types.ts`, add at the end:
+```ts
+export interface BlockedApp {
+  name: string;
+  packageName: string;
+}
+
+export interface MorningBlockSettings {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+  dismissMode: "gentle" | "firm";
+  blockedApps: BlockedApp[];
+  unlockedToday: boolean;
+}
+```
+
+- [ ] **Step 2: Add to AppData and defaults in store**
+
+In `lib/store.ts`, add `MorningBlockSettings` to the import from `./types`.
+
+Add `morningBlock: MorningBlockSettings;` to the `AppData` interface.
+
+Add default morning block settings after `defaultReminders`:
+```ts
+const defaultMorningBlock: MorningBlockSettings = {
+  enabled: false,
+  startTime: "06:00",
+  endTime: "09:00",
+  dismissMode: "gentle",
+  blockedApps: [
+    { name: "Instagram", packageName: "com.instagram.android" },
+    { name: "Twitter/X", packageName: "com.twitter.android" },
+    { name: "Reddit", packageName: "com.reddit.frontpage" },
+    { name: "TikTok", packageName: "com.zhiliaoapp.musically" },
+    { name: "YouTube", packageName: "com.google.android.youtube" },
+    { name: "Telegram", packageName: "org.telegram.messenger" },
+    { name: "Chrome", packageName: "com.android.chrome" },
+  ],
+  unlockedToday: false,
+};
+```
+
+Add `morningBlock: defaultMorningBlock` to the `generateSeedData()` return object and handle it in `migrateData()`:
+```ts
+// In migrateData:
+if (!data.morningBlock) {
+  data.morningBlock = defaultMorningBlock;
+}
+```
+
+- [ ] **Step 3: Add daily reset logic**
+
+In `initStore()`, after loading data, check if the date has changed and reset `unlockedToday`:
+```ts
+export async function initStore(): Promise<void> {
+  if (!_data) {
+    if (!_loadPromise) _loadPromise = loadData();
+    _data = await _loadPromise;
+  }
+  // Daily reset for morning block
+  const todayStr = getTodayStr();
+  if (_data.morningBlock?.unlockedToday) {
+    // Check if it's a new day by comparing with last session date or storing last reset date
+    // Simple approach: store last reset date
+    const lastResetDate = (_data as any)._lastMorningBlockReset;
+    if (lastResetDate !== todayStr) {
+      _data = { ..._data, morningBlock: { ..._data.morningBlock, unlockedToday: false } };
+      (_data as any)._lastMorningBlockReset = todayStr;
+      await saveData(_data);
+    }
+  }
+}
+```
+
+- [ ] **Step 4: Unlock on session completion**
+
+In `recordSession()`, after updating data, check if morning block should unlock:
+```ts
+  // After the updateData call at the end of recordSession:
+  if (session.qualifiedForDayCredit) {
+    const currentData = getData();
+    if (currentData.morningBlock?.enabled) {
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      if (timeStr >= currentData.morningBlock.startTime && timeStr < currentData.morningBlock.endTime) {
+        await updateData((d) => ({
+          ...d,
+          morningBlock: { ...d.morningBlock, unlockedToday: true },
+        }));
+        // Call native module to unlock
+        try {
+          const MorningBlockModule = require("../../modules/morning-block").default;
+          MorningBlockModule.unlockForToday();
+        } catch {}
+      }
+    }
+  }
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add lib/types.ts lib/store.ts
+git commit -m "feat: add morning block settings to store with daily reset and session unlock"
+```
+
+---
+
+### Task 36: Create Morning Block settings UI section
+
+**Files:**
+- Modify: `app/(tabs)/settings.tsx`
+- Create: `components/MorningBlockSetup.tsx`
+
+- [ ] **Step 1: Create MorningBlockSetup component**
+
+Create `components/MorningBlockSetup.tsx`:
+```tsx
+import { useState, useEffect } from "react";
+import { View, Text, Pressable, Platform } from "react-native";
+import { AlertTriangle, Shield, Smartphone } from "lucide-react-native";
+import { Section } from "./Section";
+import { Row } from "./Row";
+import { Chip } from "./Chip";
+import { ToggleRow } from "./ToggleRow";
+import { TimePicker } from "./TimePicker";
+import { colors } from "../constants/theme";
+import { MorningBlockSettings, BlockedApp } from "../lib/types";
+
+interface Props {
+  settings: MorningBlockSettings;
+  onChange: (settings: MorningBlockSettings) => void;
+}
+
+export function MorningBlockSetup({ settings, onChange }: Props) {
+  const [accessibilityOk, setAccessibilityOk] = useState(false);
+  const [overlayOk, setOverlayOk] = useState(false);
+
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    checkPermissions();
+  }, []);
+
+  const checkPermissions = async () => {
+    if (Platform.OS !== "android") return;
+    try {
+      const MorningBlockModule = require("../../modules/morning-block").default;
+      const acc = await MorningBlockModule.isAccessibilityEnabled();
+      const ovl = await MorningBlockModule.isOverlayEnabled();
+      setAccessibilityOk(acc);
+      setOverlayOk(ovl);
+    } catch {}
+  };
+
+  const openAccessibility = () => {
+    try {
+      const MorningBlockModule = require("../../modules/morning-block").default;
+      MorningBlockModule.openAccessibilitySettings();
+    } catch {}
+  };
+
+  const requestOverlay = () => {
+    try {
+      const MorningBlockModule = require("../../modules/morning-block").default;
+      MorningBlockModule.requestOverlayPermission();
+    } catch {}
+  };
+
+  const syncNative = (updated: MorningBlockSettings) => {
+    onChange(updated);
+    if (Platform.OS !== "android") return;
+    try {
+      const MorningBlockModule = require("../../modules/morning-block").default;
+      MorningBlockModule.configure(
+        JSON.stringify({
+          ...updated,
+          blockedApps: updated.blockedApps.map((a) => a.packageName),
+        })
+      );
+    } catch {}
+  };
+
+  if (Platform.OS !== "android") {
+    return (
+      <Section title="Morning Block">
+        <Row>
+          <Text className="text-sm text-muted-foreground">
+            Morning Block is only available on Android
+          </Text>
+        </Row>
+      </Section>
+    );
+  }
+
+  const needsSetup = settings.enabled && (!accessibilityOk || !overlayOk);
+
+  return (
+    <Section title="Morning Block">
+      <ToggleRow
+        label="Enable morning block"
+        value={settings.enabled}
+        onChange={(v) => syncNative({ ...settings, enabled: v })}
+      />
+
+      {settings.enabled && (
+        <>
+          {/* Permission cards */}
+          {needsSetup && (
+            <View className="gap-2">
+              {!accessibilityOk && (
+                <Pressable
+                  onPress={openAccessibility}
+                  className="flex-row items-center gap-3 rounded-2xl bg-card px-5 py-4"
+                >
+                  <Shield color={colors.accent} size={18} />
+                  <View className="flex-1">
+                    <Text className="text-sm text-foreground">Enable Accessibility Service</Text>
+                    <Text className="text-xs text-muted-foreground">
+                      Required to detect when blocked apps open
+                    </Text>
+                  </View>
+                </Pressable>
+              )}
+              {!overlayOk && (
+                <Pressable
+                  onPress={requestOverlay}
+                  className="flex-row items-center gap-3 rounded-2xl bg-card px-5 py-4"
+                >
+                  <Smartphone color={colors.accent} size={18} />
+                  <View className="flex-1">
+                    <Text className="text-sm text-foreground">Allow overlay permission</Text>
+                    <Text className="text-xs text-muted-foreground">
+                      Required to show the block screen over other apps
+                    </Text>
+                  </View>
+                </Pressable>
+              )}
+              <Pressable onPress={checkPermissions}>
+                <Text className="text-xs text-accent text-center mt-1">
+                  Tap to re-check permissions
+                </Text>
+              </Pressable>
+            </View>
+          )}
+
+          {/* Time window */}
+          <Row>
+            <Text className="text-sm text-foreground">Start time</Text>
+            <TimePicker
+              value={settings.startTime}
+              onChange={(v) => syncNative({ ...settings, startTime: v })}
+            />
+          </Row>
+          <Row>
+            <Text className="text-sm text-foreground">End time</Text>
+            <TimePicker
+              value={settings.endTime}
+              onChange={(v) => syncNative({ ...settings, endTime: v })}
+            />
+          </Row>
+
+          {/* Dismiss mode */}
+          <Row>
+            <Text className="text-sm text-foreground">Dismiss mode</Text>
+            <View className="flex-row items-center gap-2">
+              <Chip
+                active={settings.dismissMode === "gentle"}
+                onPress={() => syncNative({ ...settings, dismissMode: "gentle" })}
+              >
+                Gentle
+              </Chip>
+              <Chip
+                active={settings.dismissMode === "firm"}
+                onPress={() => syncNative({ ...settings, dismissMode: "firm" })}
+              >
+                Firm
+              </Chip>
+            </View>
+          </Row>
+
+          {/* Blocked apps list */}
+          <View>
+            <Text className="mb-2 text-xs text-muted-foreground">Blocked apps</Text>
+            {settings.blockedApps.map((app) => (
+              <View
+                key={app.packageName}
+                className="flex-row items-center justify-between rounded-2xl bg-card px-5 py-3 mb-1"
+              >
+                <Text className="text-sm text-foreground">{app.name}</Text>
+                <Pressable
+                  onPress={() =>
+                    syncNative({
+                      ...settings,
+                      blockedApps: settings.blockedApps.filter(
+                        (a) => a.packageName !== app.packageName
+                      ),
+                    })
+                  }
+                >
+                  <Text className="text-xs text-destructive">Remove</Text>
+                </Pressable>
+              </View>
+            ))}
+          </View>
+        </>
+      )}
+    </Section>
+  );
+}
+```
+
+- [ ] **Step 2: Add MorningBlockSetup to Settings screen**
+
+In `app/(tabs)/settings.tsx`, import:
+```tsx
+import { MorningBlockSetup } from "../../components/MorningBlockSetup";
+```
+
+Add state:
+```tsx
+const [morningBlock, setMorningBlock] = useState(data.morningBlock);
+```
+
+Add `morningBlock` to the auto-save useEffect updater:
+```tsx
+updateData((d) => ({ ...d, settings, presets, reminders, morningBlock, morningCommitmentTime: commitment }));
+```
+
+Add the component in the settings scroll view, after the Reminders section:
+```tsx
+          {/* Morning Block */}
+          <MorningBlockSetup
+            settings={morningBlock}
+            onChange={setMorningBlock}
+          />
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add components/MorningBlockSetup.tsx app/(tabs)/settings.tsx
+git commit -m "feat: add morning block settings UI with permission setup"
+```
+
+---
+
+### Task 37: Write tests for morning block store logic
+
+**Files:**
+- Create: `lib/__tests__/morningBlock.test.ts`
+
+- [ ] **Step 1: Write tests**
+
+```tsx
+jest.mock("@react-native-async-storage/async-storage", () => ({
+  getItem: jest.fn(() => Promise.resolve(null)),
+  setItem: jest.fn(() => Promise.resolve()),
+  removeItem: jest.fn(() => Promise.resolve()),
+}));
+
+import { initStore, getData, recordSession, resetData } from "../store";
+import { TimerConfig } from "../types";
+
+const defaultConfig: TimerConfig = {
+  duration: 10,
+  startBell: "Root Chakra",
+  endBell: "Root Chakra",
+  intervalBells: false,
+  intervalMinutes: 7,
+  ambientSound: null,
+};
+
+describe("morning block store logic", () => {
+  beforeEach(async () => {
+    await resetData();
+    await initStore();
+  });
+
+  test("morning block settings have correct defaults", () => {
+    const data = getData();
+    expect(data.morningBlock).toBeDefined();
+    expect(data.morningBlock.enabled).toBe(false);
+    expect(data.morningBlock.startTime).toBe("06:00");
+    expect(data.morningBlock.endTime).toBe("09:00");
+    expect(data.morningBlock.dismissMode).toBe("gentle");
+    expect(data.morningBlock.blockedApps.length).toBeGreaterThan(0);
+    expect(data.morningBlock.unlockedToday).toBe(false);
+  });
+
+  test("blocked apps include default social media apps", () => {
+    const data = getData();
+    const packageNames = data.morningBlock.blockedApps.map((a) => a.packageName);
+    expect(packageNames).toContain("com.instagram.android");
+    expect(packageNames).toContain("com.twitter.android");
+    expect(packageNames).toContain("com.reddit.frontpage");
+  });
+});
+```
+
+- [ ] **Step 2: Run tests**
+
+```bash
+npm test -- --testPathPattern="morningBlock.test"
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add lib/__tests__/morningBlock.test.ts
+git commit -m "test: add morning block store logic tests"
+```
+
+---
+
 ## Summary of all files touched
 
 **Created:**
@@ -2011,9 +2975,21 @@ git commit -m "fix: make all cards 80% transparent"
 - `scripts/generate-icons.js`
 - `scripts/generate-paper-texture.js` (or manual texture replacement)
 - `assets/textures/paper-crumpled.png`
+- `modules/morning-block/` — full native Expo module:
+  - `index.ts` — JS bridge
+  - `expo-module.config.json`
+  - `app.plugin.js` — config plugin for manifest
+  - `android/build.gradle.kts`
+  - `android/.../MorningBlockModule.kt`
+  - `android/.../BlockAccessibilityService.kt`
+  - `android/.../BlockOverlayManager.kt`
+  - `android/.../res/xml/accessibility_service_config.xml`
+  - `android/.../res/values/strings.xml`
+- `components/MorningBlockSetup.tsx`
 - `lib/__tests__/store.test.ts`
 - `lib/__tests__/notifications.test.ts`
 - `lib/__tests__/lastSessionDot.test.ts`
+- `lib/__tests__/morningBlock.test.ts`
 
 **Modified:**
 - `components/HamburgerButton.tsx` — lower position
