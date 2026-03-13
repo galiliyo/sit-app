@@ -219,7 +219,29 @@ This spec covers ~20 issues across the Home, Timer, Settings, Stats, Calendar sc
 
 ---
 
-## Group 10: Tests
+## Group 10: Interval Bells, Background Texture, Card Transparency
+
+### 10.1 Interval bells every 10 min + 1-minute warning
+**File:** `app/active-session.tsx`
+- Change interval logic from configurable `intervalMinutes` to fixed 10-minute intervals
+- Add a 1-minute warning bell (fires when `remaining === 60`)
+- Example: 33 min sit → bells at 10, 20, 30, and 32 minutes elapsed
+- The `intervalMinutes` field stays in the type but is ignored; the toggle is still on/off
+
+### 10.2 Background texture: crumpled paper at 50% opacity
+**File:** `components/NoiseBackground.tsx`, `assets/textures/`
+- Replace `noise-scratches.png` with a crumpled/wrinkled paper texture
+- Change opacity from `0.8` → `0.5`
+- Texture should be dark, subtle, tileable
+
+### 10.3 Cards 80% transparent
+**Files:** `components/StatCard.tsx`, `components/GlassCard.tsx`, `app/(tabs)/calendar.tsx`, `app/(tabs)/stats.tsx`
+- All card backgrounds use `rgba(26, 26, 26, 0.20)` (80% transparent / 20% opaque)
+- GlassCard tint: `rgba(40, 40, 40, 0.20)`
+
+---
+
+## Group 11: Tests
 
 ### 10.1 Unit tests for session recording logic
 - Test that sessions under 5 min get `qualifiedForDayCredit: false`

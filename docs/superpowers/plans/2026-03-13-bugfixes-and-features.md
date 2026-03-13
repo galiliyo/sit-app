@@ -1782,6 +1782,225 @@ git commit -m "test: update e2e tests for UI changes"
 
 ---
 
+## Chunk 8: Interval Bells, Background Texture, Card Transparency
+
+### Task 29: Fix interval bells — every 10 min + 1 min warning
+
+The current logic uses `config.intervalMinutes` (default 7) and plays at each interval. The new behavior:
+- **Fixed 10-minute intervals**: bell at 10, 20, 30, ... minutes elapsed
+- **1-minute warning bell**: bell when 1 minute remains (i.e., at `totalSeconds - 60`)
+- Example: 33 min sit → bells at 10, 20, 30, and 32 minutes
+
+**Files:**
+- Modify: `app/active-session.tsx:86-96`
+
+- [ ] **Step 1: Rewrite interval bell logic**
+
+In `app/active-session.tsx`, replace the interval bells useEffect (lines 86-96):
+```tsx
+  // Interval bells
+  useEffect(() => {
+    if (phase !== "session" || !config.intervalBells || paused || remaining <= 0) return;
+    const elapsed = totalSeconds - remaining;
+    const intervalSecs = config.intervalMinutes * 60;
+    const currentInterval = Math.floor(elapsed / intervalSecs);
+    if (currentInterval > 0 && currentInterval !== lastIntervalBell.current) {
+      lastIntervalBell.current = currentInterval;
+      playBell(config.startBell);
+    }
+  }, [remaining, phase, paused, config, totalSeconds]);
+```
+with:
+```tsx
+  // Interval bells: every 10 minutes + 1 minute warning
+  const oneMinWarningPlayed = useRef(false);
+  useEffect(() => {
+    if (phase !== "session" || !config.intervalBells || paused || remaining <= 0) return;
+    const elapsed = totalSeconds - remaining;
+
+    // 10-minute interval bells
+    const INTERVAL_SECS = 10 * 60;
+    const currentInterval = Math.floor(elapsed / INTERVAL_SECS);
+    if (currentInterval > 0 && currentInterval !== lastIntervalBell.current) {
+      lastIntervalBell.current = currentInterval;
+      playBell(config.startBell);
+    }
+
+    // 1-minute warning bell (only if session is longer than 2 min to avoid overlap with end bell)
+    if (remaining === 60 && totalSeconds > 120 && !oneMinWarningPlayed.current) {
+      oneMinWarningPlayed.current = true;
+      playBell(config.startBell);
+    }
+  }, [remaining, phase, paused, config, totalSeconds]);
+```
+
+Note: The `oneMinWarningPlayed` ref prevents the 1-min bell from playing again if user pauses/resumes around the 1-min mark. Also, the 1-min bell doesn't fire for very short sessions (under 2 min) to avoid it clashing with the end bell.
+
+- [ ] **Step 2: Remove `intervalMinutes` from the UI/config since it's now fixed at 10**
+
+The `intervalMinutes` field in `TimerConfig` and `Preset` can stay in the type (backward compat) but is no longer used for interval timing. No UI change needed since the preset editor only shows a toggle for interval bells (on/off), not the interval duration.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/active-session.tsx
+git commit -m "fix: interval bells every 10 min plus 1-minute warning"
+```
+
+---
+
+### Task 30: Change background texture to crumpled paper + 50% opacity
+
+**Files:**
+- Replace: `assets/textures/noise-scratches.png` with a crumpled paper texture
+- Modify: `components/NoiseBackground.tsx:25`
+
+- [ ] **Step 1: Generate a crumpled paper texture**
+
+The current texture is `noise-scratches.png` which looks like scratched/noisy film grain. We need a crumpled/wrinkled paper texture instead.
+
+**Option A (programmatic):** Create a script to generate a subtle crumpled paper texture:
+
+Create `scripts/generate-paper-texture.js`:
+```js
+const { createCanvas } = require("canvas");
+const fs = require("fs");
+const path = require("path");
+
+// Install: npm install --save-dev canvas
+const SIZE = 512;
+const canvas = createCanvas(SIZE, SIZE);
+const ctx = canvas.getContext("2d");
+
+// Dark base
+ctx.fillStyle = "#0a0a0a";
+ctx.fillRect(0, 0, SIZE, SIZE);
+
+// Add subtle crumpled paper noise
+const imageData = ctx.getImageData(0, 0, SIZE, SIZE);
+const data = imageData.data;
+
+for (let i = 0; i < data.length; i += 4) {
+  const x = (i / 4) % SIZE;
+  const y = Math.floor(i / 4 / SIZE);
+
+  // Multiple octaves of noise for paper-like wrinkles
+  const n1 = Math.sin(x * 0.02 + y * 0.015) * Math.cos(y * 0.03 - x * 0.01);
+  const n2 = Math.sin(x * 0.05 + y * 0.04) * Math.cos(y * 0.06 + x * 0.03);
+  const n3 = (Math.random() - 0.5) * 0.3; // fine grain
+
+  const combined = (n1 * 0.4 + n2 * 0.3 + n3 * 0.3) * 30;
+
+  data[i] = Math.max(0, Math.min(255, 10 + combined));     // R
+  data[i + 1] = Math.max(0, Math.min(255, 10 + combined)); // G
+  data[i + 2] = Math.max(0, Math.min(255, 10 + combined)); // B
+  // Alpha stays 255
+}
+
+ctx.putImageData(imageData, 0, 0);
+
+const buffer = canvas.toBuffer("image/png");
+fs.writeFileSync(path.join(__dirname, "../assets/textures/paper-crumpled.png"), buffer);
+console.log("Generated paper-crumpled.png");
+```
+
+**Option B (recommended):** Use a royalty-free crumpled paper texture image. Download a dark, subtle crumpled paper texture and save as `assets/textures/paper-crumpled.png`. The texture should be:
+- Dark (near black, matching #0a0a0a background)
+- Subtle wrinkle/crumple lines (not heavy)
+- Tileable preferred (512×512 or 1024×1024)
+
+- [ ] **Step 2: Update NoiseBackground to use new texture + 50% opacity**
+
+In `components/NoiseBackground.tsx`, change line 3:
+```tsx
+const noiseTexture = require("../assets/textures/noise-scratches.png");
+```
+to:
+```tsx
+const noiseTexture = require("../assets/textures/paper-crumpled.png");
+```
+
+And change opacity on line 25:
+```tsx
+    opacity: 0.8,
+```
+to:
+```tsx
+    opacity: 0.5,
+```
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add assets/textures/paper-crumpled.png components/NoiseBackground.tsx
+git commit -m "feat: replace scratched noise with crumpled paper texture at 50% opacity"
+```
+
+---
+
+### Task 31: Make cards 80% transparent
+
+The user wants card backgrounds at 80% transparency (i.e., 20% opaque, `opacity: 0.20`).
+
+**Files:**
+- Modify: `components/StatCard.tsx:3`
+- Modify: `components/GlassCard.tsx:32`
+- Modify: `app/(tabs)/calendar.tsx:14` (CARD_BG for non-StatCard cards)
+- Modify: `app/(tabs)/stats.tsx` (CARD_BG for weekly chart)
+
+- [ ] **Step 1: Update StatCard background**
+
+In `components/StatCard.tsx`, change:
+```tsx
+const CARD_BG = "rgba(26, 26, 26, 0.50)";
+```
+to:
+```tsx
+const CARD_BG = "rgba(26, 26, 26, 0.20)";
+```
+
+- [ ] **Step 2: Update GlassCard tint**
+
+In `components/GlassCard.tsx` line 32, change (from earlier plan step it's already `0.30`):
+```tsx
+    backgroundColor: "rgba(40, 40, 40, 0.30)",
+```
+to:
+```tsx
+    backgroundColor: "rgba(40, 40, 40, 0.20)",
+```
+
+- [ ] **Step 3: Update calendar CARD_BG**
+
+In `app/(tabs)/calendar.tsx`, change:
+```tsx
+const CARD_BG = "rgba(26, 26, 26, 0.50)";
+```
+to:
+```tsx
+const CARD_BG = "rgba(26, 26, 26, 0.20)";
+```
+
+- [ ] **Step 4: Update stats CARD_BG**
+
+In `app/(tabs)/stats.tsx`, change:
+```tsx
+const CARD_BG = "rgba(26, 26, 26, 0.50)";
+```
+to:
+```tsx
+const CARD_BG = "rgba(26, 26, 26, 0.20)";
+```
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add components/StatCard.tsx components/GlassCard.tsx app/(tabs)/calendar.tsx app/(tabs)/stats.tsx
+git commit -m "fix: make all cards 80% transparent"
+```
+
+---
+
 ## Summary of all files touched
 
 **Created:**
@@ -1790,6 +2009,8 @@ git commit -m "test: update e2e tests for UI changes"
 - `app/data-management.tsx`
 - `lib/screenBlock.ts`
 - `scripts/generate-icons.js`
+- `scripts/generate-paper-texture.js` (or manual texture replacement)
+- `assets/textures/paper-crumpled.png`
 - `lib/__tests__/store.test.ts`
 - `lib/__tests__/notifications.test.ts`
 - `lib/__tests__/lastSessionDot.test.ts`
@@ -1806,6 +2027,8 @@ git commit -m "test: update e2e tests for UI changes"
 - `app/active-session.tsx` — less prominent buttons, screen blocking
 - `app/_layout.tsx` — notification init on startup
 - `lib/store.ts` — default min sit to 5
+- `app/active-session.tsx` — interval bells logic (10 min + 1 min warning)
+- `components/NoiseBackground.tsx` — crumpled paper texture, 50% opacity
 - `app.json` — expo-notifications plugin
 - `package.json` — new dependencies
 - `e2e/app.spec.ts` — updated tests
