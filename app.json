@@ -45,7 +45,8 @@
         {
           "sounds": []
         }
-      ]
+      ],
+      "./modules/morning-block/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true

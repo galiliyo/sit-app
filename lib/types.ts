@@ -79,6 +79,20 @@ export interface Preset {
   quickStart: boolean; // show on home screen (max 3)
 }
 
+export interface BlockedApp {
+  name: string;
+  packageName: string;
+}
+
+export interface MorningBlockSettings {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+  dismissMode: "gentle" | "firm";
+  blockedApps: BlockedApp[];
+  unlockedToday: boolean;
+}
+
 export interface Milestone {
   id: string;
   title: string;

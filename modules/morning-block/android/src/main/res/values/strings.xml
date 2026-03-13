@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="morning_block_description">Sit uses this to detect when you open distracting apps during your morning block window and show a meditation reminder.</string>
+</resources>

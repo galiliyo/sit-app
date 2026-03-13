@@ -11,7 +11,7 @@ import { colors } from "../../constants/theme";
 
 const WEEK_HEADERS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 
-const CARD_BG = "rgba(26, 26, 26, 0.50)";
+const CARD_BG = "rgba(26, 26, 26, 0.20)";
 const CARD_SHADOW = {
   shadowColor: "#fff",
   shadowOffset: { width: 0, height: 0 },

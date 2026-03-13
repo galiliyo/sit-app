@@ -14,6 +14,7 @@ import { ToggleRow } from "../../components/ToggleRow";
 import { PresetEditor } from "../../components/PresetEditor";
 import { TimePicker } from "../../components/TimePicker";
 import { scheduleReminders } from "../../lib/notifications";
+import { MorningBlockSetup } from "../../components/MorningBlockSetup";
 import { colors } from "../../constants/theme";
 
 export default function SettingsScreen() {
@@ -30,6 +31,7 @@ export default function SettingsScreen() {
   const [reminders, setReminders] = useState(data.reminders);
   const [commitment, setCommitment] = useState(data.morningCommitmentTime || "07:30");
   const [minSitText, setMinSitText] = useState(String(settings.minimumSitMinutes));
+  const [morningBlock, setMorningBlock] = useState(data.morningBlock);
   const [editingPreset, setEditingPreset] = useState<Preset | null>(null);
   const isFirstRender = useRef(true);
 
@@ -39,9 +41,9 @@ export default function SettingsScreen() {
       isFirstRender.current = false;
       return;
     }
-    updateData((d) => ({ ...d, settings, presets, reminders, morningCommitmentTime: commitment }));
+    updateData((d) => ({ ...d, settings, presets, reminders, morningBlock, morningCommitmentTime: commitment }));
     scheduleReminders(reminders);
-  }, [settings, presets, reminders, commitment]);
+  }, [settings, presets, reminders, morningBlock, commitment]);
 
 const handleSavePreset = (preset: Preset) => {
     let updated = [...presets];
@@ -245,6 +247,12 @@ const handleSavePreset = (preset: Preset) => {
               </Row>
             )}
           </Section>
+
+          {/* Morning Block */}
+          <MorningBlockSetup
+            settings={morningBlock}
+            onChange={setMorningBlock}
+          />
 
           {/* Morning commitment */}
           <Section title="Morning commitment">

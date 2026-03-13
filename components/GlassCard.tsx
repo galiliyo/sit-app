@@ -29,6 +29,6 @@ const styles = StyleSheet.create({
   },
   tint: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(40, 40, 40, 0.30)",
+    backgroundColor: "rgba(40, 40, 40, 0.20)",
   },
 });
