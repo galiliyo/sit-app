@@ -117,12 +117,6 @@ export function EnsoButton({ onPress, label, progress, color }: EnsoButtonProps)
             style={{
               width: ENSO_SIZE,
               height: ENSO_SIZE,
-              borderRadius: ENSO_SIZE / 2,
-              shadowColor: "#fff",
-              shadowOffset: { width: 0, height: 0 },
-              shadowOpacity: 0.08,
-              shadowRadius: 24,
-              elevation: 8,
             }}
           >
             <EnsoCircle size={ENSO_SIZE} color={color} />

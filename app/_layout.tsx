@@ -21,8 +21,9 @@ import {
   PlayfairDisplay_700Bold,
 } from "@expo-google-fonts/playfair-display";
 import * as SplashScreen from "expo-splash-screen";
-import { initStore } from "../lib/store";
+import { initStore, getData } from "../lib/store";
 import { configureAudio } from "../lib/bells";
+import { scheduleReminders } from "../lib/notifications";
 import "../global.css";
 
 export { ErrorBoundary } from "expo-router";
@@ -62,6 +63,13 @@ export default function RootLayout() {
     if (ready) SplashScreen.hideAsync();
   }, [ready]);
 
+  useEffect(() => {
+    if (storeReady) {
+      const data = getData();
+      scheduleReminders(data.reminders);
+    }
+  }, [storeReady]);
+
   if (!ready) {
     return (
       <View className="flex-1 bg-background items-center justify-center">
@@ -83,6 +91,7 @@ export default function RootLayout() {
         <Stack.Screen name="timer-setup" options={{ presentation: "modal" }} />
         <Stack.Screen name="active-session" options={{ gestureEnabled: false }} />
         <Stack.Screen name="session-complete" options={{ gestureEnabled: false }} />
+        <Stack.Screen name="data-management" options={{ presentation: "modal" }} />
       </Stack>
     </SafeAreaProvider>
   );

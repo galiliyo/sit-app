@@ -1,6 +1,6 @@
 import { Image, StyleSheet, View } from "react-native";
 
-const noiseTexture = require("../assets/textures/noise-scratches.png");
+const noiseTexture = require("../assets/textures/paper-texture.png");
 
 export function NoiseBackground() {
   return (
@@ -22,6 +22,6 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    opacity: 0.8,
+    opacity: 0.5,
   },
 });

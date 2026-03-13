@@ -25,7 +25,7 @@ interface AppData {
 }
 
 const defaultSettings: UserSettings = {
-  minimumSitMinutes: 2,
+  minimumSitMinutes: 5,
   defaultQuickStartMinutes: 5,
   preferredStartBell: "Root Chakra",
   preferredEndBell: "Root Chakra",

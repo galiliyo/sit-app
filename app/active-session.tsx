@@ -10,6 +10,8 @@ import { TimerConfig } from "../lib/types";
 import { EnsoButton } from "../components/EnsoButton";
 import { colors } from "../constants/theme";
 import { NoiseBackground } from "../components/NoiseBackground";
+import { enableScreenBlock, disableScreenBlock } from "../lib/screenBlock";
+import { StatusBar } from "expo-status-bar";
 
 export default function ActiveSessionScreen() {
   useKeepAwake();
@@ -38,6 +40,14 @@ export default function ActiveSessionScreen() {
   useEffect(() => {
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
     return () => sub.remove();
+  }, []);
+
+  // Immersive mode during session
+  useEffect(() => {
+    enableScreenBlock();
+    return () => {
+      disableScreenBlock();
+    };
   }, []);
 
   // Play start bell when session phase begins
@@ -83,14 +93,23 @@ export default function ActiveSessionScreen() {
     };
   }, [paused, remaining, phase]);
 
-  // Interval bells
+  // Interval bells: every 10 minutes + 1 minute warning
+  const oneMinWarningPlayed = useRef(false);
   useEffect(() => {
     if (phase !== "session" || !config.intervalBells || paused || remaining <= 0) return;
     const elapsed = totalSeconds - remaining;
-    const intervalSecs = config.intervalMinutes * 60;
-    const currentInterval = Math.floor(elapsed / intervalSecs);
+
+    // 10-minute interval bells
+    const INTERVAL_SECS = 10 * 60;
+    const currentInterval = Math.floor(elapsed / INTERVAL_SECS);
     if (currentInterval > 0 && currentInterval !== lastIntervalBell.current) {
       lastIntervalBell.current = currentInterval;
+      playBell(config.startBell);
+    }
+
+    // 1-minute warning bell (only if session is longer than 2 min to avoid overlap with end bell)
+    if (remaining === 60 && totalSeconds > 120 && !oneMinWarningPlayed.current) {
+      oneMinWarningPlayed.current = true;
       playBell(config.startBell);
     }
   }, [remaining, phase, paused, config, totalSeconds]);
@@ -115,6 +134,7 @@ export default function ActiveSessionScreen() {
     : 0;
 
   const handleFinish = async (elapsedSecs: number) => {
+    await disableScreenBlock();
     const elapsedMinutes = Math.floor(elapsedSecs / 60);
     await recordSession(elapsedMinutes, elapsedSecs, config);
     router.replace({
@@ -123,7 +143,8 @@ export default function ActiveSessionScreen() {
     });
   };
 
-  const handleDiscard = () => {
+  const handleDiscard = async () => {
+    await disableScreenBlock();
     router.replace("/(tabs)");
   };
 
@@ -131,6 +152,7 @@ export default function ActiveSessionScreen() {
   if (phase === "warmup") {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center px-6">
+        <StatusBar hidden />
         <NoiseBackground />
         <Text className="text-sm text-muted-foreground mb-4">Prepare yourself</Text>
         <Text
@@ -149,6 +171,7 @@ export default function ActiveSessionScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background items-center justify-between px-6 py-8">
+      <StatusBar hidden />
       <NoiseBackground />
       <Text className="text-sm text-muted-foreground">Meditation</Text>
 
@@ -170,21 +193,23 @@ export default function ActiveSessionScreen() {
         {remaining > 0 && (
           <Pressable
             onPress={() => setPaused(!paused)}
-            className="h-16 w-16 items-center justify-center rounded-full bg-primary"
+            className="h-12 w-12 items-center justify-center rounded-full"
+            style={{ borderWidth: 1, borderColor: "rgba(115,115,115,0.4)" }}
           >
             {paused ? (
-              <Play color={colors.primaryForeground} size={24} style={{ marginLeft: 2 }} />
+              <Play color={colors.mutedForeground} size={20} style={{ marginLeft: 2 }} />
             ) : (
-              <Pause color={colors.primaryForeground} size={24} />
+              <Pause color={colors.mutedForeground} size={20} />
             )}
           </Pressable>
         )}
 
         <Pressable
           onPress={() => handleFinish(elapsed)}
-          className="w-full rounded-2xl bg-primary py-4 items-center"
+          className="w-full rounded-2xl py-3 items-center"
+          style={{ borderWidth: 1, borderColor: "rgba(115,115,115,0.3)" }}
         >
-          <Text className="font-semibold text-primary-foreground">Finish</Text>
+          <Text className="text-sm text-muted-foreground">Finish</Text>
         </Pressable>
         <Pressable onPress={handleDiscard}>
           <Text className="text-sm text-muted-foreground">Discard session</Text>

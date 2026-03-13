@@ -10,7 +10,7 @@ export function HamburgerButton() {
     <Pressable
       onPress={() => navigation.dispatch(DrawerActions.toggleDrawer())}
       hitSlop={12}
-      style={{ position: "absolute", top: 24, left: 24, zIndex: 10 }}
+      style={{ position: "absolute", top: 48, left: 24, zIndex: 10 }}
     >
       <Menu color={colors.foreground} size={22} />
     </Pressable>
