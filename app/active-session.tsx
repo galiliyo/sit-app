@@ -175,23 +175,25 @@ export default function ActiveSessionScreen() {
     <SafeAreaView className="flex-1 bg-background items-center justify-between px-6 py-8">
       <StatusBar hidden />
       <NoiseBackground />
-      <Text className="text-sm text-muted-foreground">Meditation</Text>
+      <View />
 
-      <View className="items-center gap-3">
+      <View className="items-center">
         <EnsoButton
           onPress={() => remaining > 0 && setPaused(!paused)}
           label={`${String(mins).padStart(2, "0")}:${String(secs).padStart(2, "0")}`}
           progress={progress}
         />
-        {config.intervalBells && remaining > 0 && (
-          <Text className="text-sm text-muted-foreground">
-            {bellsRemaining} bell{bellsRemaining !== 1 ? "s" : ""} remaining
-          </Text>
-        )}
-        {remaining === 0 && <Text className="text-sm text-accent">Session complete</Text>}
+        <View style={{ height: 24, justifyContent: "center" }}>
+          {config.intervalBells && remaining > 0 && (
+            <Text className="text-sm text-muted-foreground">
+              {bellsRemaining} bell{bellsRemaining !== 1 ? "s" : ""} remaining
+            </Text>
+          )}
+          {remaining === 0 && <Text className="text-sm text-accent">Session complete</Text>}
+        </View>
       </View>
 
-      <View className="w-full items-center gap-4">
+      <View className="w-full items-center gap-4" style={{ paddingBottom: 24 }}>
         {remaining > 0 && (
           <Pressable
             onPress={() => setPaused(!paused)}
@@ -208,8 +210,8 @@ export default function ActiveSessionScreen() {
 
         <Pressable
           onPress={() => handleFinish(elapsed)}
-          className="w-full rounded-2xl py-3 items-center"
-          style={{ borderWidth: 1, borderColor: "rgba(115,115,115,0.3)" }}
+          className="rounded-2xl py-3 items-center self-center"
+          style={{ width: "75%", borderWidth: 1, borderColor: "rgba(115,115,115,0.3)" }}
         >
           <Text className="text-sm text-muted-foreground">Finish</Text>
         </Pressable>

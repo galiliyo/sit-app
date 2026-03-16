@@ -28,30 +28,37 @@ export default function SessionCompleteScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-background items-center justify-center px-6 gap-8">
+    <SafeAreaView
+      className="flex-1 bg-background"
+      style={{ alignItems: "center", justifyContent: "center", paddingHorizontal: 24, gap: 32 }}
+    >
       <NoiseBackground />
       {/* Check icon */}
       <Animated.View
         entering={ZoomIn.delay(200).springify().stiffness(200)}
-        className="h-24 w-24 items-center justify-center rounded-full"
-        style={{ backgroundColor: "rgba(54, 166, 110, 0.1)" }}
+        style={{
+          height: 96,
+          width: 96,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: 48,
+          backgroundColor: "rgba(54, 166, 110, 0.1)",
+        }}
       >
         <Check color={colors.success} size={40} />
       </Animated.View>
 
       {/* Duration */}
-      <Animated.View entering={FadeIn.delay(300)} className="items-center">
+      <Animated.View entering={FadeIn.delay(300)} style={{ alignItems: "center" }}>
         <Text className="text-3xl font-semibold text-foreground">{durationMinutes} minutes</Text>
-        <Text className="mt-2 text-sm text-muted-foreground">
-          {qualified ? "Day complete" : "Session recorded"}
-        </Text>
       </Animated.View>
 
       {/* Streak */}
       {qualified && streak > 0 && (
         <Animated.View
           entering={FadeInDown.delay(400)}
-          className="flex-row items-center gap-2 rounded-2xl bg-card px-6 py-4"
+          className="rounded-2xl bg-card"
+          style={{ flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 16 }}
         >
           <Flame color={colors.accent} size={20} />
           <Text
@@ -65,16 +72,21 @@ export default function SessionCompleteScreen() {
       )}
 
       {/* Week progress dots */}
-      <Animated.View entering={FadeIn.delay(600)} className="flex-row items-center gap-1.5">
-        {Array.from({ length: data.streak.weeklyGoal }).map((_, i) => (
-          <View
-            key={i}
-            className={`h-2.5 w-2.5 rounded-full ${
-              i < data.streak.currentWeekCount ? "bg-accent" : "bg-muted"
-            }`}
-          />
-        ))}
-        <Text className="ml-2 text-xs text-muted-foreground">
+      <Animated.View entering={FadeIn.delay(600)} style={{ alignItems: "center", gap: 8 }}>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          {Array.from({ length: data.streak.weeklyGoal }).map((_, i) => (
+            <View
+              key={i}
+              style={{
+                height: 10,
+                width: 10,
+                borderRadius: 5,
+                backgroundColor: i < data.streak.currentWeekCount ? colors.accent : colors.muted,
+              }}
+            />
+          ))}
+        </View>
+        <Text className="text-xs text-muted-foreground">
           {data.streak.currentWeekCount} of {data.streak.weeklyGoal} this week
         </Text>
       </Animated.View>
@@ -85,9 +97,16 @@ export default function SessionCompleteScreen() {
       {/* Continue button */}
       <Pressable
         onPress={handleContinue}
-        className="w-full max-w-xs rounded-2xl bg-primary py-4 items-center active:opacity-90"
+        style={{
+          width: "75%",
+          borderWidth: 1,
+          borderColor: "rgba(115,115,115,0.3)",
+          borderRadius: 16,
+          paddingVertical: 12,
+          alignItems: "center",
+        }}
       >
-        <Text className="font-semibold text-primary-foreground">Continue</Text>
+        <Text className="text-sm text-muted-foreground">Continue</Text>
       </Pressable>
     </SafeAreaView>
   );

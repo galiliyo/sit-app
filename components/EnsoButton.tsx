@@ -129,7 +129,7 @@ export function EnsoButton({ onPress, label, progress, color }: EnsoButtonProps)
         <Text
           style={{
             fontFamily: "JetBrainsMono_300Light",
-            fontSize: 28,
+            fontSize: 36,
             color: colors.foreground,
             letterSpacing: 2,
           }}

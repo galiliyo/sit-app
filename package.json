@@ -19,6 +19,7 @@
     "@react-navigation/drawer": "^7.9.4",
     "@react-navigation/native": "^7.1.28",
     "date-fns": "^4.1.0",
+    "eas-cli": "^18.3.0",
     "expo": "~55.0.5",
     "expo-av": "^16.0.8",
     "expo-blur": "~55.0.8",
@@ -29,6 +30,7 @@
     "expo-haptics": "~55.0.8",
     "expo-keep-awake": "~55.0.4",
     "expo-linking": "~55.0.7",
+    "expo-mail-composer": "~55.0.8",
     "expo-navigation-bar": "^55.0.8",
     "expo-notifications": "^55.0.12",
     "expo-router": "~55.0.4",
@@ -67,7 +69,11 @@
   "jest": {
     "preset": "ts-jest",
     "testEnvironment": "node",
-    "testPathIgnorePatterns": ["/node_modules/", "/e2e/", "__mocks__"],
+    "testPathIgnorePatterns": [
+      "/node_modules/",
+      "/e2e/",
+      "__mocks__"
+    ],
     "moduleNameMapper": {
       "^@react-native-async-storage/async-storage$": "<rootDir>/lib/__tests__/__mocks__/async-storage.ts"
     }

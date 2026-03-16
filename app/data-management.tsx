@@ -8,64 +8,131 @@ import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import { getData, updateData, resetData, initStore } from "../lib/store";
 import { NoiseBackground } from "../components/NoiseBackground";
+import { GlassCard } from "../components/GlassCard";
 import { Section } from "../components/Section";
 import { colors } from "../constants/theme";
 
+function validateBackup(data: any): string | null {
+  if (!data || typeof data !== "object") return "File is not a valid JSON object";
+  if (!Array.isArray(data.sessions)) return "Missing or invalid 'sessions'";
+  if (!data.dayRecords || typeof data.dayRecords !== "object") return "Missing or invalid 'dayRecords'";
+  if (!data.settings || typeof data.settings !== "object") return "Missing or invalid 'settings'";
+  if (!data.streak || typeof data.streak !== "object") return "Missing or invalid 'streak'";
+  return null;
+}
+
 export default function DataManagementScreen() {
-  const [status, setStatus] = useState<string | null>(null);
+  const [status, setStatus] = useState<{ text: string; error?: boolean } | null>(null);
 
   const handleExport = async () => {
     try {
       const data = getData();
       const json = JSON.stringify(data, null, 2);
-      const fileUri = FileSystem.documentDirectory + "sit-backup.json";
-      await FileSystem.writeAsStringAsync(fileUri, json, {
-        encoding: FileSystem.EncodingType.UTF8,
-      });
-      await Sharing.shareAsync(fileUri, {
+      const dateStr = new Date().toISOString().split("T")[0];
+      const fileName = `sit-backup-${dateStr}.json`;
+
+      // Try both directories
+      const dirs = [FileSystem.documentDirectory, FileSystem.cacheDirectory].filter(Boolean) as string[];
+      if (dirs.length === 0) {
+        setStatus({ text: "Export failed — no writable directory available", error: true });
+        return;
+      }
+
+      let fileUri = "";
+      let written = false;
+      for (const dir of dirs) {
+        try {
+          const sep = dir.endsWith("/") ? "" : "/";
+          fileUri = dir + sep + fileName;
+          await FileSystem.writeAsStringAsync(fileUri, json, {
+            encoding: FileSystem.EncodingType.UTF8,
+          });
+          // Verify the file was actually written
+          const info = await FileSystem.getInfoAsync(fileUri);
+          if (info.exists) {
+            written = true;
+            break;
+          }
+        } catch {
+          continue;
+        }
+      }
+
+      if (!written) {
+        setStatus({ text: "Export failed — could not write backup file", error: true });
+        return;
+      }
+
+      // Convert to content:// URI on Android for proper file sharing
+      let shareUri = fileUri;
+      try {
+        const contentUri = await FileSystem.getContentUriAsync(fileUri);
+        if (contentUri) shareUri = contentUri;
+      } catch {
+        // Fall back to original URI
+      }
+
+      await Sharing.shareAsync(shareUri, {
         mimeType: "application/json",
-        dialogTitle: "Export Sit data",
+        dialogTitle: "Sit App Backup",
+        UTI: "public.json",
       });
-      setStatus("Data exported successfully");
-    } catch (e) {
-      setStatus("Export failed");
+      setStatus({ text: "Backup shared" });
+    } catch (e: any) {
+      if (e?.message?.includes("dismissed")) return;
+      setStatus({ text: `Export failed — ${e?.message || "unknown error"}`, error: true });
     }
   };
 
   const handleImport = async () => {
+    setStatus(null);
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: "application/json",
+        type: ["application/json", "*/*"],
         copyToCacheDirectory: true,
       });
       if (result.canceled) return;
 
       const file = result.assets[0];
       const content = await FileSystem.readAsStringAsync(file.uri);
-      const imported = JSON.parse(content);
 
-      // Basic validation
-      if (!imported.sessions || !imported.dayRecords || !imported.settings) {
-        Alert.alert("Invalid file", "This doesn't look like a Sit backup file.");
+      let imported: any;
+      try {
+        imported = JSON.parse(content);
+      } catch {
+        setStatus({ text: "Import failed — file is not valid JSON", error: true });
         return;
       }
 
+      const validationError = validateBackup(imported);
+      if (validationError) {
+        setStatus({ text: `Import failed — ${validationError}`, error: true });
+        return;
+      }
+
+      const sessionCount = imported.sessions.length;
+      const dayCount = Object.keys(imported.dayRecords).length;
+
       Alert.alert(
         "Import data",
-        "This will replace all your current data. Continue?",
+        `This backup contains ${sessionCount} sessions across ${dayCount} days. Importing will replace all your current data. Continue?`,
         [
           { text: "Cancel", style: "cancel" },
           {
             text: "Import",
             onPress: async () => {
-              await updateData(() => imported);
-              setStatus("Data imported successfully");
+              try {
+                await updateData(() => imported);
+                setStatus({ text: `Imported successfully — ${sessionCount} sessions, ${dayCount} days` });
+              } catch (e: any) {
+                setStatus({ text: `Import failed — ${e?.message || "unknown error"}`, error: true });
+              }
             },
           },
         ]
       );
-    } catch (e) {
-      setStatus("Import failed — invalid file");
+    } catch (e: any) {
+      setStatus({ text: `Import failed — ${e?.message || "could not read file"}`, error: true });
     }
   };
 
@@ -81,7 +148,7 @@ export default function DataManagementScreen() {
           onPress: async () => {
             await resetData();
             await initStore();
-            setStatus("All data erased");
+            setStatus({ text: "All data erased" });
           },
         },
       ]
@@ -102,50 +169,53 @@ export default function DataManagementScreen() {
 
         <Text
           className="text-foreground mb-6"
-          style={{ fontFamily: "PlayfairDisplay_600SemiBold", fontSize: 24 }}
+          style={{ fontFamily: "PlayfairDisplay_400Regular", fontSize: 24 }}
         >
           Manage Data
         </Text>
 
-        <Section title="Backup">
-          <Pressable
-            onPress={handleExport}
-            className="flex-row items-center gap-3 rounded-2xl bg-card px-5 py-4 active:bg-muted"
-          >
-            <Download color={colors.accent} size={18} />
-            <View>
-              <Text className="text-sm text-foreground">Export data</Text>
-              <Text className="text-xs text-muted-foreground">Save a JSON backup of all your data</Text>
-            </View>
-          </Pressable>
+        <View style={{ gap: 20 }}>
+          <Section title="Backup">
+            <Pressable onPress={handleExport}>
+              <GlassCard className="flex-row items-center gap-3 px-5 py-4">
+                <Download color={colors.accent} size={18} />
+                <View>
+                  <Text className="text-sm text-foreground">Export data</Text>
+                  <Text className="text-xs text-muted-foreground">Share a backup via WhatsApp, email, etc.</Text>
+                </View>
+              </GlassCard>
+            </Pressable>
 
-          <Pressable
-            onPress={handleImport}
-            className="flex-row items-center gap-3 rounded-2xl bg-card px-5 py-4 active:bg-muted"
-          >
-            <Upload color={colors.accent} size={18} />
-            <View>
-              <Text className="text-sm text-foreground">Import data</Text>
-              <Text className="text-xs text-muted-foreground">Restore from a backup file</Text>
-            </View>
-          </Pressable>
-        </Section>
+            <Pressable onPress={handleImport}>
+              <GlassCard className="flex-row items-center gap-3 px-5 py-4">
+                <Upload color={colors.accent} size={18} />
+                <View>
+                  <Text className="text-sm text-foreground">Import data</Text>
+                  <Text className="text-xs text-muted-foreground">Restore from a JSON backup file</Text>
+                </View>
+              </GlassCard>
+            </Pressable>
+          </Section>
 
-        <Section title="Danger zone">
-          <Pressable
-            onPress={handleErase}
-            className="flex-row items-center gap-3 rounded-2xl bg-card px-5 py-4 active:bg-muted"
-          >
-            <Trash2 color={colors.destructive} size={18} />
-            <View>
-              <Text className="text-sm text-destructive">Erase all data</Text>
-              <Text className="text-xs text-muted-foreground">Permanently delete everything</Text>
-            </View>
-          </Pressable>
-        </Section>
+          <Section title="Danger zone">
+            <Pressable onPress={handleErase}>
+              <GlassCard className="flex-row items-center gap-3 px-5 py-4">
+                <Trash2 color={colors.destructive} size={18} />
+                <View>
+                  <Text className="text-sm text-destructive">Erase all data</Text>
+                  <Text className="text-xs text-muted-foreground">Permanently delete everything</Text>
+                </View>
+              </GlassCard>
+            </Pressable>
+          </Section>
+        </View>
 
         {status && (
-          <Text className="mt-4 text-center text-sm text-muted-foreground">{status}</Text>
+          <Text
+            className={`mt-4 text-center text-sm ${status.error ? "text-destructive" : "text-muted-foreground"}`}
+          >
+            {status.text}
+          </Text>
         )}
       </View>
     </SafeAreaView>

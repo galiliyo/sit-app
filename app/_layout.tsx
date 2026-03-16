@@ -91,7 +91,7 @@ export default function RootLayout() {
         <Stack.Screen name="timer-setup" options={{ presentation: "modal" }} />
         <Stack.Screen name="active-session" options={{ gestureEnabled: false }} />
         <Stack.Screen name="session-complete" options={{ gestureEnabled: false }} />
-        <Stack.Screen name="data-management" options={{ presentation: "modal" }} />
+        <Stack.Screen name="data-management" />
       </Stack>
     </SafeAreaProvider>
   );

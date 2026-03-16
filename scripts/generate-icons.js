@@ -18,7 +18,7 @@ for (const { name, size, padding } of sizes) {
   const wrappedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
     <rect width="${size}" height="${size}" fill="#0a0a0a"/>
     <g transform="translate(${padding}, ${padding})">
-      <svg width="${size - padding * 2}" height="${size - padding * 2}" viewBox="0 0 240 240">
+      <svg width="${size - padding * 2}" height="${size - padding * 2}" viewBox="0 0 469 486">
         ${svg.replace(/<\/?svg[^>]*>/g, "")}
       </svg>
     </g>

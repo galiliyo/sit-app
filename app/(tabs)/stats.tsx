@@ -45,38 +45,37 @@ export default function StatsScreen() {
       <NoiseBackground />
       <HamburgerButton />
 
-      <View className="flex-1 px-6" style={{ marginTop: 76, gap: 20 }}>
-        {/* Main stats grid - 2 columns */}
-        <View className="gap-3">
-          <View className="flex-row gap-3">
+      <View className="flex-1 px-6" style={{ marginTop: 76, gap: 12, paddingBottom: 24 }}>
+        {/* Main stats grid - flex 1 per row */}
+        <View style={{ flex: 1, gap: 8 }}>
+          <View className="flex-1 flex-row gap-3">
             <StatCard icon={<Clock color={colors.mutedForeground} size={16} />} value={stats.totalMinutes} label="total minutes" />
             <StatCard icon={<Target color={colors.mutedForeground} size={16} />} value={stats.totalSessions} label="total sessions" />
           </View>
-          <View className="flex-row gap-3">
+          <View className="flex-1 flex-row gap-3">
             <StatCard icon={<Flame color={colors.accent} size={16} />} value={data.streak.currentDailyStreak} label="current streak" />
             <StatCard icon={<Award color={colors.mutedForeground} size={16} />} value={data.streak.longestDailyStreak} label="longest streak" />
           </View>
-          <View className="flex-row gap-3">
+          <View className="flex-1 flex-row gap-3">
             <StatCard icon={<Sun color={colors.mutedForeground} size={16} />} value={stats.morningSessions} label="morning sits" />
             <StatCard icon={<Moon color={colors.mutedForeground} size={16} />} value={stats.eveningSessions} label="evening sits" />
           </View>
+          <View className="flex-1 flex-row gap-3">
+            <StatCard icon={<CalendarIcon color={colors.mutedForeground} size={16} />} value={stats.totalDaysMeditated} label="days meditated" />
+            <StatCard icon={<TrendingUp color={colors.mutedForeground} size={16} />} value={stats.averageSessionMinutes} label="avg. minutes" />
+          </View>
         </View>
 
-        {/* Extra stats */}
-        <View className="flex-row gap-3">
-          <StatCard icon={<CalendarIcon color={colors.mutedForeground} size={16} />} value={stats.totalDaysMeditated} label="days meditated" />
-          <StatCard icon={<TrendingUp color={colors.mutedForeground} size={16} />} value={stats.averageSessionMinutes} label="avg. minutes" />
-        </View>
-
-        {/* Weekly chart */}
+        {/* Weekly chart - 1.5x the height of the cards section */}
         <View
           className="rounded-2xl p-5"
-          style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
+          style={{ flex: 1.5, backgroundColor: CARD_BG, ...CARD_SHADOW }}
         >
-          <Text className="mb-4 text-sm text-muted-foreground">Last 7 days</Text>
-          <View className="flex-row items-end justify-between gap-2" style={{ height: 100 }}>
+          <Text className="mb-2 text-sm text-muted-foreground">Last 7 days</Text>
+          <View className="flex-1 flex-row items-end justify-between gap-2">
             {weekData.map((d, i) => (
-              <View key={i} className="flex-1 items-center gap-1.5">
+              <View key={i} className="flex-1 items-center gap-1.5" style={{ height: "100%" }}>
+                <View className="flex-1" />
                 <View
                   className={`w-full rounded-md ${
                     d.qualified
@@ -85,7 +84,7 @@ export default function StatsScreen() {
                       ? "bg-muted-foreground/30"
                       : "bg-muted"
                   }`}
-                  style={{ height: Math.max((d.minutes / maxMin) * 80, 4) }}
+                  style={{ height: `${Math.max((d.minutes / maxMin) * 80, 4)}%` }}
                 />
                 <Text className="text-[10px] text-muted-foreground">{d.label}</Text>
               </View>

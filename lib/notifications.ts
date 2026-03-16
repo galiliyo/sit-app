@@ -2,18 +2,23 @@ import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { ReminderSettings } from "./types";
 
+const isNative = Platform.OS === "ios" || Platform.OS === "android";
+
 // Configure how notifications appear when app is in foreground
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+if (isNative) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export async function requestNotificationPermissions(): Promise<boolean> {
+  if (!isNative) return false;
   const { status: existing } = await Notifications.getPermissionsAsync();
   if (existing === "granted") return true;
 
@@ -22,6 +27,7 @@ export async function requestNotificationPermissions(): Promise<boolean> {
 }
 
 export async function scheduleReminders(reminders: ReminderSettings): Promise<void> {
+  if (!isNative) return;
   // Cancel all existing scheduled notifications
   await Notifications.cancelAllScheduledNotificationsAsync();
 

@@ -21,14 +21,20 @@ async function getSound(name: string): Promise<Audio.Sound | null> {
   return soundCache[name];
 }
 
+async function preloadAllSounds(): Promise<void> {
+  for (const name of Object.keys(BELL_FILES)) {
+    await getSound(name);
+  }
+}
+
 export async function playBell(name: string): Promise<void> {
   if (name === "None") return;
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   const mapped = mapLegacyName(name);
   const sound = await getSound(mapped);
   if (!sound) return;
-  await sound.setPositionAsync(0);
-  await sound.playAsync();
+  // Fire both without waiting for setPosition to finish before playing
+  sound.setPositionAsync(0).then(() => sound.playAsync());
 }
 
 export async function previewBell(name: string): Promise<void> {
@@ -46,4 +52,6 @@ export async function configureAudio(): Promise<void> {
     playsInSilentModeIOS: true,
     staysActiveInBackground: true,
   });
+  // Preload all bell sounds so playback is instant
+  await preloadAllSounds();
 }

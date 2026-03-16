@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
 import { View, Text, Pressable } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFocusEffect, router } from "expo-router";
+import { useFocusEffect } from "expo-router";
 import { ChevronLeft, ChevronRight, Flame, Award } from "lucide-react-native";
 import { getData } from "../../lib/store";
 import { StatCard } from "../../components/StatCard";
@@ -163,13 +163,6 @@ export default function CalendarScreen() {
           <StatCard icon={<Award color={colors.mutedForeground} size={16} />} value={data.streak.longestDailyStreak} label="longest streak" />
         </View>
 
-        {/* Data management link */}
-        <Pressable
-          onPress={() => router.push("/data-management")}
-          className="items-center py-4"
-        >
-          <Text className="text-sm text-muted-foreground underline">Manage Data</Text>
-        </Pressable>
       </View>
     </SafeAreaView>
   );

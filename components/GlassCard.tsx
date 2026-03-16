@@ -10,8 +10,10 @@ type Props = {
 export function GlassCard({ children, style, className }: Props) {
   return (
     <View style={[styles.outer, style]} className={className}>
-      <BlurView intensity={40} tint="dark" style={styles.blur} />
-      <View style={styles.tint} />
+      <View style={styles.bgLayers} pointerEvents="none">
+        <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        <View style={styles.tint} />
+      </View>
       {children}
     </View>
   );
@@ -19,13 +21,15 @@ export function GlassCard({ children, style, className }: Props) {
 
 const styles = StyleSheet.create({
   outer: {
+    position: "relative",
     overflow: "hidden",
     borderRadius: 16,
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: "rgba(255,255,255,0.08)",
   },
-  blur: {
+  bgLayers: {
     ...StyleSheet.absoluteFillObject,
+    zIndex: 0,
   },
   tint: {
     ...StyleSheet.absoluteFillObject,

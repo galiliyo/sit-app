@@ -10,6 +10,7 @@ import { NoiseBackground } from "../../components/NoiseBackground";
 import { Preset } from "../../lib/types";
 import { Section } from "../../components/Section";
 import { Row } from "../../components/Row";
+import { GlassCard } from "../../components/GlassCard";
 import { Chip } from "../../components/Chip";
 import { ToggleRow } from "../../components/ToggleRow";
 import { PresetEditor } from "../../components/PresetEditor";
@@ -108,7 +109,7 @@ const handleSavePreset = (preset: Preset) => {
       >
         <ScrollView
           className="flex-1 px-6"
-          contentContainerStyle={{ paddingTop: 76, paddingBottom: 32, gap: 20 }}
+          contentContainerStyle={{ paddingTop: 76, paddingBottom: 80, gap: 20 }}
           keyboardShouldPersistTaps="handled"
         >
           {/* Presets */}
@@ -117,9 +118,9 @@ const handleSavePreset = (preset: Preset) => {
               Up to 3 can appear on your home screen as quick-start buttons
             </Text>
             {presets.map((preset) => (
-              <View
+              <GlassCard
                 key={preset.id}
-                className="flex-row items-center justify-between rounded-2xl bg-card px-5 py-4"
+                className="flex-row items-center justify-between px-5 py-4"
               >
                 <View className="flex-row items-center gap-3">
                   {preset.quickStart && <View className="h-2 w-2 rounded-full bg-accent" />}
@@ -144,14 +145,13 @@ const handleSavePreset = (preset: Preset) => {
                     <Trash2 color={colors.mutedForeground} size={14} />
                   </Pressable>
                 </View>
-              </View>
+              </GlassCard>
             ))}
-            <Pressable
-              onPress={handleNewPreset}
-              className="flex-row items-center justify-center gap-2 rounded-2xl bg-card px-5 py-4 active:bg-muted"
-            >
+            <Pressable onPress={handleNewPreset}>
+              <GlassCard className="flex-row items-center justify-center gap-2 px-5 py-4">
               <Plus color={colors.mutedForeground} size={16} />
               <Text className="text-sm text-muted-foreground">Add preset</Text>
+              </GlassCard>
             </Pressable>
           </Section>
 
@@ -264,24 +264,21 @@ const handleSavePreset = (preset: Preset) => {
           <Section title="Morning commitment">
             <Row>
               <Text className="text-sm text-foreground">Tomorrow at</Text>
-              <TextInput
+              <TimePicker
                 value={commitment}
-                onChangeText={setCommitment}
-                className="text-right text-sm text-accent"
-                placeholder="07:30"
-                placeholderTextColor={colors.mutedForeground}
+                onChange={setCommitment}
               />
             </Row>
           </Section>
 
           {/* Data */}
+          {/* Data */}
           <Section title="Data">
-            <Pressable
-              onPress={() => router.push("/data-management")}
-              className="flex-row items-center justify-between rounded-2xl bg-card px-5 py-4 active:bg-muted"
-            >
-              <Text className="text-sm text-foreground">Manage data</Text>
-              <ChevronRight color={colors.mutedForeground} size={16} />
+            <Pressable onPress={() => router.push("/data-management")}>
+              <GlassCard className="flex-row items-center justify-between px-5 py-4">
+                <Text className="text-sm text-foreground">Manage data</Text>
+                <ChevronRight color={colors.mutedForeground} size={16} />
+              </GlassCard>
             </Pressable>
           </Section>
 

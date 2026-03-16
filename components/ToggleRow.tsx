@@ -1,8 +1,9 @@
-import { Pressable, Text, View } from "react-native";
+import { Pressable, Text } from "react-native";
 import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
+import { GlassCard } from "./GlassCard";
 import { colors } from "../constants/theme";
 
 const TRACK_W = 44;
@@ -27,7 +28,7 @@ export function ToggleRow({ label, value, onChange }: ToggleRowProps) {
   }));
 
   return (
-    <View className="flex-row items-center justify-between rounded-2xl bg-card px-5 py-4">
+    <GlassCard className="flex-row items-center justify-between px-5 py-4">
       <Text className="text-sm text-foreground">{label}</Text>
       <Pressable onPress={() => onChange(!value)}>
         <Animated.View
@@ -54,6 +55,6 @@ export function ToggleRow({ label, value, onChange }: ToggleRowProps) {
           />
         </Animated.View>
       </Pressable>
-    </View>
+    </GlassCard>
   );
 }
