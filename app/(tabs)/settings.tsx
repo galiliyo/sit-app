@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { View, Text, Pressable, ScrollView, TextInput, KeyboardAvoidingView, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFocusEffect } from "expo-router";
-import { Plus, Pencil, Trash2 } from "lucide-react-native";
+import { Plus, Pencil, Trash2, ChevronRight } from "lucide-react-native";
+import { router } from "expo-router";
 import { getData, updateData } from "../../lib/store";
 import { HamburgerButton } from "../../components/HamburgerButton";
 import { NoiseBackground } from "../../components/NoiseBackground";
@@ -25,6 +26,7 @@ export default function SettingsScreen() {
     ...data.settings,
     warmUpEnabled: data.settings.warmUpEnabled ?? false,
     warmUpSeconds: data.settings.warmUpSeconds ?? 10,
+    screenLockEnabled: data.settings.screenLockEnabled ?? true,
   });
   const [presets, setPresets] = useState<Preset[]>(data.presets || []);
   const [reminders, setReminders] = useState(data.reminders);
@@ -214,6 +216,18 @@ const handleSavePreset = (preset: Preset) => {
             )}
           </Section>
 
+          {/* Screen lock */}
+          <Section title="During session">
+            <ToggleRow
+              label="Keep screen awake"
+              value={settings.screenLockEnabled}
+              onChange={(v) => setSettings((s) => ({ ...s, screenLockEnabled: v }))}
+            />
+            <Text className="px-1 text-xs text-muted-foreground">
+              Prevents the screen from dimming or locking while meditating
+            </Text>
+          </Section>
+
           {/* Reminders */}
           <Section title="Reminders">
             <ToggleRow
@@ -260,7 +274,18 @@ const handleSavePreset = (preset: Preset) => {
             </Row>
           </Section>
 
-<Text className="pb-4 text-center text-xs text-muted-foreground">Sit · v0.1</Text>
+          {/* Data */}
+          <Section title="Data">
+            <Pressable
+              onPress={() => router.push("/data-management")}
+              className="flex-row items-center justify-between rounded-2xl bg-card px-5 py-4 active:bg-muted"
+            >
+              <Text className="text-sm text-foreground">Manage data</Text>
+              <ChevronRight color={colors.mutedForeground} size={16} />
+            </Pressable>
+          </Section>
+
+          <Text className="pb-4 text-center text-xs text-muted-foreground">Sit · v0.1</Text>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

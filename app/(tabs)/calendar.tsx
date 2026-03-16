@@ -15,9 +15,9 @@ const CARD_BG = "rgba(26, 26, 26, 0.50)";
 const CARD_SHADOW = {
   shadowColor: "#fff",
   shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0.06,
-  shadowRadius: 14,
-  elevation: 4,
+  shadowOpacity: 0.025,
+  shadowRadius: 8,
+  elevation: 2,
 } as const;
 
 export default function CalendarScreen() {

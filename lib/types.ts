@@ -47,6 +47,7 @@ export interface UserSettings {
   quickStartPresets: number[];
   warmUpEnabled: boolean;
   warmUpSeconds: number;
+  screenLockEnabled: boolean;
 }
 
 export interface StatsSummary {

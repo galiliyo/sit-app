@@ -1,11 +1,11 @@
 import { Image, StyleSheet, View } from "react-native";
 
-const noiseTexture = require("../assets/textures/paper-texture.png");
+const paperBg = require("../assets/images/paper_bg.jpg");
 
 export function NoiseBackground() {
   return (
     <View style={styles.wrap} pointerEvents="none">
-      <Image source={noiseTexture} style={styles.image} resizeMode="cover" />
+      <Image source={paperBg} style={styles.image} resizeMode="cover" />
     </View>
   );
 }
@@ -22,6 +22,5 @@ const styles = StyleSheet.create({
   image: {
     width: "100%",
     height: "100%",
-    opacity: 0.5,
   },
 });

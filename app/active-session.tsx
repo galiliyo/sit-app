@@ -3,7 +3,7 @@ import { View, Text, Pressable, BackHandler } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useLocalSearchParams, router } from "expo-router";
 import { Play, Pause } from "lucide-react-native";
-import { useKeepAwake } from "expo-keep-awake";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import { getData, recordSession } from "../lib/store";
 import { playBell } from "../lib/bells";
 import { TimerConfig } from "../lib/types";
@@ -14,8 +14,6 @@ import { enableScreenBlock, disableScreenBlock } from "../lib/screenBlock";
 import { StatusBar } from "expo-status-bar";
 
 export default function ActiveSessionScreen() {
-  useKeepAwake();
-
   const params = useLocalSearchParams<{ config: string }>();
   const config: TimerConfig = params.config
     ? JSON.parse(params.config)
@@ -42,13 +40,17 @@ export default function ActiveSessionScreen() {
     return () => sub.remove();
   }, []);
 
-  // Immersive mode during session
+  // Screen lock: keep awake + immersive mode
+  const screenLockEnabled = data.settings.screenLockEnabled ?? true;
   useEffect(() => {
+    if (!screenLockEnabled) return;
+    activateKeepAwakeAsync();
     enableScreenBlock();
     return () => {
+      deactivateKeepAwake();
       disableScreenBlock();
     };
-  }, []);
+  }, [screenLockEnabled]);
 
   // Play start bell when session phase begins
   useEffect(() => {

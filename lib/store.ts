@@ -35,6 +35,7 @@ const defaultSettings: UserSettings = {
   quickStartPresets: [5, 10, 15],
   warmUpEnabled: false,
   warmUpSeconds: 10,
+  screenLockEnabled: true,
 };
 
 const defaultPresets: Preset[] = [
@@ -91,6 +92,48 @@ const defaultMilestones: Milestone[] = [
   { id: "sessions_50", title: "50 Sessions", description: "Fifty times you chose to sit.", achieved: false },
 ];
 
+/** Count consecutive days (backward from `from`) with a qualified sit (>= minimum). */
+function calcCurrentStreak(dayRecords: Record<string, DayRecord>, from: Date): number {
+  let streak = 0;
+  for (let i = 0; i <= 1000; i++) {
+    const d = new Date(from);
+    d.setDate(d.getDate() - i);
+    const ds = d.toISOString().split("T")[0];
+    if (dayRecords[ds]?.qualified) {
+      streak++;
+    } else if (i === 0) {
+      // Today has no qualified session yet — check from yesterday
+      continue;
+    } else {
+      break;
+    }
+  }
+  return streak;
+}
+
+/** Walk all dayRecords to find the longest consecutive run of qualified days. */
+function calcLongestStreak(dayRecords: Record<string, DayRecord>): number {
+  const dates = Object.keys(dayRecords)
+    .filter((d) => dayRecords[d].qualified)
+    .sort();
+  if (dates.length === 0) return 0;
+
+  let longest = 1;
+  let current = 1;
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1]);
+    const curr = new Date(dates[i]);
+    const diffDays = Math.round((curr.getTime() - prev.getTime()) / 86400000);
+    if (diffDays === 1) {
+      current++;
+      if (current > longest) longest = current;
+    } else {
+      current = 1;
+    }
+  }
+  return longest;
+}
+
 function generateSeedData(): AppData {
   const sessions: Session[] = [];
   const dayRecords: Record<string, DayRecord> = {};
@@ -143,18 +186,9 @@ function generateSeedData(): AppData {
   const todaySessionIdx = sessions.findIndex((s) => s.startTime.startsWith(todayStr));
   if (todaySessionIdx >= 0) sessions.splice(todaySessionIdx, 1);
 
-  // Calculate streak (days before today)
-  let currentStreak = 0;
-  for (let i = 1; i <= 30; i++) {
-    const d = new Date(today);
-    d.setDate(d.getDate() - i);
-    const ds = d.toISOString().split("T")[0];
-    if (dayRecords[ds]?.qualified) {
-      currentStreak++;
-    } else {
-      break;
-    }
-  }
+  // Calculate streaks using helpers
+  const currentStreak = calcCurrentStreak(dayRecords, today);
+  const longestStreak = calcLongestStreak(dayRecords);
 
   const thisWeekStart = new Date(today);
   thisWeekStart.setDate(thisWeekStart.getDate() - thisWeekStart.getDay() + 1);
@@ -171,7 +205,7 @@ function generateSeedData(): AppData {
     dayRecords,
     streak: {
       currentDailyStreak: currentStreak,
-      longestDailyStreak: Math.max(currentStreak, 8),
+      longestDailyStreak: Math.max(currentStreak, longestStreak),
       currentWeekCount: weekCount,
       weeklyGoal: 5,
       longestWeeklyCompletionRun: 3,
@@ -325,18 +359,9 @@ export async function recordSession(
     lastSessionTime: now.toISOString(),
   };
 
-  // Update streak
-  let newStreak = data.streak.currentDailyStreak;
-  if (session.qualifiedForDayCredit && !existing?.qualified) {
-    const yesterday = new Date(now);
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
-    if (data.dayRecords[yesterdayStr]?.qualified || newStreak > 0) {
-      newStreak += 1;
-    } else {
-      newStreak = 1;
-    }
-  }
+  // Recalculate streak from scratch: count consecutive days with at least 1 session
+  const updatedDayRecords = { ...data.dayRecords, [todayStr]: dayRecord };
+  const newStreak = calcCurrentStreak(updatedDayRecords, now);
 
   // Week count
   const weekStart = new Date(now);
@@ -358,7 +383,11 @@ export async function recordSession(
     streak: {
       ...d.streak,
       currentDailyStreak: newStreak,
-      longestDailyStreak: Math.max(d.streak.longestDailyStreak, newStreak),
+      longestDailyStreak: Math.max(
+        d.streak.longestDailyStreak,
+        newStreak,
+        calcLongestStreak({ ...d.dayRecords, [todayStr]: dayRecord })
+      ),
       currentWeekCount: weekCount,
     },
   }));

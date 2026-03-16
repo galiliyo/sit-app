@@ -4,9 +4,9 @@ const CARD_BG = "rgba(26, 26, 26, 0.50)";
 const CARD_SHADOW = {
   shadowColor: "#fff",
   shadowOffset: { width: 0, height: 0 },
-  shadowOpacity: 0.06,
-  shadowRadius: 14,
-  elevation: 4,
+  shadowOpacity: 0.025,
+  shadowRadius: 8,
+  elevation: 2,
 } as const;
 
 interface StatCardProps {
@@ -18,13 +18,13 @@ interface StatCardProps {
 export function StatCard({ icon, value, label }: StatCardProps) {
   return (
     <View
-      className="flex-1 rounded-2xl p-4"
+      className="flex-1 rounded-2xl p-3"
       style={{ backgroundColor: CARD_BG, ...CARD_SHADOW }}
     >
-      <View className="mb-2">{icon}</View>
+      <View className="mb-1.5 pl-1">{icon}</View>
       <View className="items-center">
         <Text
-          className="text-3xl text-foreground"
+          className="text-2xl text-foreground"
           style={{ fontFamily: "JetBrainsMono_400Regular" }}
         >
           {value}
