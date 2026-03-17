@@ -260,6 +260,21 @@ const handleSavePreset = (preset: Preset) => {
             )}
           </Section>
 
+          {/* Morning Block */}
+          <Section title="Morning Block">
+            <Pressable onPress={() => router.push("/morning-block-settings")}>
+              <GlassCard className="flex-row items-center justify-between px-5 py-4">
+                <View>
+                  <Text className="text-sm text-foreground">Morning block settings</Text>
+                  <Text className="text-xs text-muted-foreground">
+                    Block distracting apps until you sit
+                  </Text>
+                </View>
+                <ChevronRight color={colors.mutedForeground} size={16} />
+              </GlassCard>
+            </Pressable>
+          </Section>
+
           {/* Morning commitment */}
           <Section title="Morning commitment">
             <Row>

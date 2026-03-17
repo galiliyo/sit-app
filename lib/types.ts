@@ -87,3 +87,17 @@ export interface Milestone {
   achieved: boolean;
   achievedDate?: string;
 }
+
+export interface BlockedApp {
+  name: string;
+  packageName: string;
+}
+
+export interface MorningBlockSettings {
+  enabled: boolean;
+  startTime: string;
+  endTime: string;
+  dismissMode: "gentle" | "firm";
+  blockedApps: BlockedApp[];
+  unlockedToday: boolean;
+}

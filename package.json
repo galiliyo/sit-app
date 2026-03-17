@@ -8,7 +8,8 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "test": "jest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "build-preview-android": "npx eas build --platform android --profile preview"
   },
   "dependencies": {
     "@expo-google-fonts/dm-sans": "^0.4.2",
@@ -19,7 +20,7 @@
     "@react-navigation/drawer": "^7.9.4",
     "@react-navigation/native": "^7.1.28",
     "date-fns": "^4.1.0",
-    "eas-cli": "^18.3.0",
+    "eas-cli": "^18.4.0",
     "expo": "~55.0.5",
     "expo-av": "^16.0.8",
     "expo-blur": "~55.0.8",

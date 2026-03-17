@@ -46,7 +46,8 @@
           "sounds": []
         }
       ],
-      "expo-mail-composer"
+      "expo-mail-composer",
+      "./modules/morning-block/app.plugin.js"
     ],
     "experiments": {
       "typedRoutes": true

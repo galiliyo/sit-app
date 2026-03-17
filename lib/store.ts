@@ -9,6 +9,8 @@ import {
   Milestone,
   StatsSummary,
   Preset,
+  MorningBlockSettings,
+  BlockedApp,
 } from "./types";
 
 const STORAGE_KEY = "sit_app_data";
@@ -22,6 +24,8 @@ interface AppData {
   milestones: Milestone[];
   morningCommitmentTime: string | null;
   presets: Preset[];
+  morningBlock: MorningBlockSettings;
+  _lastMorningBlockReset?: string;
 }
 
 const defaultSettings: UserSettings = {
@@ -79,6 +83,23 @@ const defaultReminders: ReminderSettings = {
   morningTime: "07:30",
   eveningEnabled: false,
   eveningTime: "21:00",
+};
+
+const defaultMorningBlock: MorningBlockSettings = {
+  enabled: false,
+  startTime: "06:00",
+  endTime: "09:00",
+  dismissMode: "gentle",
+  blockedApps: [
+    { name: "Instagram", packageName: "com.instagram.android" },
+    { name: "Twitter/X", packageName: "com.twitter.android" },
+    { name: "Reddit", packageName: "com.reddit.frontpage" },
+    { name: "TikTok", packageName: "com.zhiliaoapp.musically" },
+    { name: "YouTube", packageName: "com.google.android.youtube" },
+    { name: "Telegram", packageName: "org.telegram.messenger" },
+    { name: "Chrome", packageName: "com.android.chrome" },
+  ],
+  unlockedToday: false,
 };
 
 const defaultMilestones: Milestone[] = [
@@ -243,6 +264,7 @@ function generateSeedData(): AppData {
     }),
     morningCommitmentTime: "07:30",
     presets: defaultPresets,
+    morningBlock: defaultMorningBlock,
   };
 }
 
@@ -260,6 +282,9 @@ function migrateData(data: any): AppData {
       ambientSound: null,
       quickStart: true,
     }));
+  }
+  if (!data.morningBlock) {
+    data.morningBlock = defaultMorningBlock;
   }
   return data as AppData;
 }
@@ -289,6 +314,18 @@ export async function initStore(): Promise<void> {
   if (!_data) {
     if (!_loadPromise) _loadPromise = loadData();
     _data = await _loadPromise;
+  }
+  // Daily reset for morning block
+  if (_data.morningBlock) {
+    const todayStr = getTodayStr();
+    if (_data._lastMorningBlockReset !== todayStr) {
+      _data = {
+        ..._data,
+        morningBlock: { ..._data.morningBlock, unlockedToday: false },
+        _lastMorningBlockReset: todayStr,
+      };
+      await saveData(_data);
+    }
   }
 }
 
@@ -391,6 +428,24 @@ export async function recordSession(
       currentWeekCount: weekCount,
     },
   }));
+
+  // Unlock morning block if session qualifies during block window
+  if (session.qualifiedForDayCredit) {
+    const currentData = getData();
+    if (currentData.morningBlock?.enabled && !currentData.morningBlock.unlockedToday) {
+      const timeStr = `${String(now.getHours()).padStart(2, "0")}:${String(now.getMinutes()).padStart(2, "0")}`;
+      if (timeStr >= currentData.morningBlock.startTime && timeStr < currentData.morningBlock.endTime) {
+        await updateData((d) => ({
+          ...d,
+          morningBlock: { ...d.morningBlock, unlockedToday: true },
+        }));
+        try {
+          const MorningBlockModule = require("../modules/morning-block").default;
+          MorningBlockModule.unlockForToday();
+        } catch {}
+      }
+    }
+  }
 
   return session;
 }
