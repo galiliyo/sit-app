@@ -63,16 +63,7 @@ export default function DataManagementScreen() {
         return;
       }
 
-      // Convert to content:// URI on Android for proper file sharing
-      let shareUri = fileUri;
-      try {
-        const contentUri = await FileSystem.getContentUriAsync(fileUri);
-        if (contentUri) shareUri = contentUri;
-      } catch {
-        // Fall back to original URI
-      }
-
-      await Sharing.shareAsync(shareUri, {
+      await Sharing.shareAsync(fileUri, {
         mimeType: "application/json",
         dialogTitle: "Sit App Backup",
         UTI: "public.json",
